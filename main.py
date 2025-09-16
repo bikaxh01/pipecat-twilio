@@ -12,8 +12,6 @@ from model.model import Call, CallStatus, PincodeData
 
 load_dotenv(override=True)
 
-# In-memory store for body data by call SID
-call_body_data = {}
 
 
 app = FastAPI()
@@ -34,9 +32,15 @@ async def startup_db_client():
     Uses Motor async client for better performance and reliability.
     """
     from model.model import connect_to_db
+    from utils.bot import initialize_heavy_components
 
     logger.info("🟢🟢Connecting to MongoDB")
     await connect_to_db()
+    
+    # Pre-initialize heavy bot components at startup
+    logger.info("🚀 Pre-initializing bot components...")
+    await initialize_heavy_components()
+    logger.info("✅ Bot components ready - initialization time optimized!")
 
 
 @app.on_event("shutdown")
@@ -71,10 +75,12 @@ async def initiate_outbound_call(request: Request) -> JSONResponse:
                 status_code=400, detail="Missing 'phone_number' in the request body"
             )
 
-        # Extract the phone number to dial
+        # Extract the phone number and name
         phone_number = str(data["phone_number"])
-        logger.info(f"Processing outbound call to {phone_number}")
-        print(f"Processing outbound call to {phone_number}")
+        customer_name = data.get("name", "there")  # Extract name, default to "there"
+        
+        logger.info(f"Processing outbound call to {phone_number} for {customer_name}")
+        print(f"Processing outbound call to {phone_number} for {customer_name}")
 
         # Extract body data if provided
         body_data = data.get("body", {})
@@ -108,13 +114,12 @@ async def initiate_outbound_call(request: Request) -> JSONResponse:
             )
             call_sid = call_result["sid"]
 
-            # Store body data for this call
-            if body_data:
-                call_body_data[call_sid] = body_data
+            # Store call data in database (including customer name)
             await Call.insert_one(
                 Call(
                     call_sid=call_sid,
                     phone_number=phone_number,
+                    name=customer_name,  # Store the customer name in DB
                 )
             )
         except Exception as e:
@@ -130,7 +135,7 @@ async def initiate_outbound_call(request: Request) -> JSONResponse:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
     return JSONResponse(
-        {"call_sid": call_sid, "status": "call_initiated", "phone_number": phone_number}
+        {"call_sid": call_sid, "status": "call_initiated", "phone_number": phone_number, "customer_name": customer_name}
     )
 
 
@@ -193,22 +198,18 @@ async def get_twiml(request: Request) -> HTMLResponse:
     # Extract call information
     call_sid = form_data.get("CallSid", "")
 
-    # Retrieve body data for this call
-    body_data = call_body_data.get(call_sid, {})
+    # Retrieve call data from database instead of in-memory store
+    body_data = {}
+    if call_sid:
+        try:
+            call_record = await Call.find_one({"call_sid": call_sid})
+            if call_record and call_record.name:
+                body_data["name"] = call_record.name
+                logger.info(f"Retrieved name from database for TwiML: {call_record.name}")
+        except Exception as e:
+            logger.warning(f"Failed to retrieve call data from database: {e}")
+            body_data = {}
 
-    # Clean up stored data for this call
-    if call_sid and body_data:
-        # Clean up the stored data
-        del call_body_data[call_sid]
-
-    # Validate environment configuration for production
-    env = os.getenv("ENV", "local").lower()
-    if env == "production":
-        if not os.getenv("AGENT_NAME") or not os.getenv("ORGANIZATION_NAME"):
-            raise HTTPException(
-                status_code=500,
-                detail="AGENT_NAME and ORGANIZATION_NAME must be set for production deployment",
-            )
 
     try:
         # Get the server host to construct WebSocket URL
@@ -302,24 +303,6 @@ async def twilio_status_callback(request: Request):
         )
 
 
-@app.post("/recording-status-callback")
-async def recording_status_callback(request: Request):
-    """Handle Twilio recording status callback."""
-
-    form_data = await request.form()
-
-    # Extract call information
-    call_sid = form_data.get("CallSid", "")
-    recording_url = form_data.get("RecordingUrl", "")
-    print(f"Twilio recording status callback call SID: {call_sid}")
-    print(f"Twilio recording status callback recording URL: {recording_url}")
-    call = await Call.find_one({"call_sid": call_sid})
-    if call:
-        call.recording_url = recording_url
-        await call.save()
-    return JSONResponse(
-        content={"message": "Twilio recording status callback received"}
-    )
 
 
 if __name__ == "__main__":

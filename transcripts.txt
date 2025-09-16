@@ -1,26 +1,23 @@
-assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। क्या मैं Aashish से बात कर रही हूँ?
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। क्या मैं Bikash से बात कर रही हूँ?
 assistant: Confirm करने के लिए धन्यवाद। आपने makeO Toothsi के बारे में inquiry की थी, correct?
-assistant: Perfect! क्या मैं आपकी dental concern जान सकती हूँ? जैसे कि टेढ़े दाँत, gaps, या कुछ और?
-assistant: आपकी बेहतर help के लिए, आपका pincode बता सकते हैं?
-assistant: मैं
-assistant: Toothsi की तरफ से Ananya बोल रही हूँ। क्या मैं Aashish से बात कर रही हूँ?
-assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। क्या मैं Aashish से बात कर रही हूँ?
-assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। क्या मैं Aashish से बात कर रही हूँ?
+user: اپ کی کان میں <noise> correct but I think you died the wrong number.
+assistant: Perfect! क्या मैं आपकी dental concern जान सकती हूँ? जैसे कि टेढ़े दाँत, gaps,
+user: I think to write the wrong numbers is not there.
 assistant: Oh, sorry to disturb you.
-user: Hello.
-assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। क्या मैं Aashish से बात कर रही हूँ?
-मैं Toothsi की तरफ से An
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। क्या मैं Bikash से बात कर रही हूँ?
 assistant: Confirm करने के लिए धन्यवाद। आपने makeO Toothsi के बारे में inquiry की थी, correct?
+user: याद रखिए Ia descarcă.
 assistant: Perfect! क्या मैं आपकी dental concern जान सकती हूँ? जैसे कि टेढ़े दाँत, gaps, या कुछ और?
-user: dead हां हां करेक्ट है किसी Hello are you there?
 assistant: आपकी बेहतर help के लिए, आपका pincode बता सकते हैं?
 assistant: आपने one two two zero zero one बताया है, correct है ना?
-user: it's 122001 Hello.
-user:  Hello.
-assistant: आपने one two two zero zero one बताया है, correct है ना?
-assistant: Hey are you there?
-user: Ja ja.
-assistant: आपके area one two two zero zero one में हमारे clinics available हैं। एक है SEC one four Gurugram और दूसरा है Sector five one Gurugram। साथ ही home scan option भी available है।
-assistant: Excellent choice! मैं अभी आपकी call हमारे booking specialist को transfer कर रही हूँ। वो आपका appointment schedule करेंगे।
-user: কম স্ক্র্যান বুক করা হবে Are you there?
-assistant: Oka y.
+user: ඒ අර ඉදිරියට Yeah man could 12201 Why you are not switching the language?
+assistant: You mentioned one two two zero zero one, is that correct?
+user: .
+assistant: Perfect! What's your primary concern with your teeth? Crooked teeth, gaps, or something else?
+assistant: To help you better, could you please share your pincode?
+assistant: मैं
+assistant: Toothsi की तरफ
+assistant: Confirm करने के लिए धन्यवाद। आपने makeO Toothsi के बारे में inquiry की थी, correct?
+assistant: Perfect! क्या मैं आपकी dental concern जान सकती हूँ? जैसे कि टेढ़े दाँत, gaps
+user: हेलो ఆ కరెక్ట్ No I don't have any dental consent.
+assistant: आपकी बेहतर help के लिए, आपका pincode बता सकते हैं?आपकी बेहतर help के लिए, आपका pincode बता सकते हैं?

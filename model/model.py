@@ -43,6 +43,7 @@ class Call(Document):
     call_sid: str
     status: str = CallStatus.RINGING
     phone_number: str
+    name: Optional[str] = None  # Add name field for dynamic prompts
     recording_url: Optional[str] = None
     call_cost: Optional[float] = None
     transcript: Optional[str] = None
@@ -64,14 +65,15 @@ async def connect_to_db():
 
         logger.info("🟢🟢Connecting to MongoDB using Motor...")
 
-        # Create Motor async client with proper connection parameters
+        # Create Motor async client with optimized connection parameters
         client = AsyncIOMotorClient(
             MONGO_URI,
-            serverSelectionTimeoutMS=5000,  # 5 second timeout for server selection
-            connectTimeoutMS=10000,  # 10 second timeout for connection
-            socketTimeoutMS=20000,  # 20 second timeout for socket operations
-            maxPoolSize=10,  # Maximum number of connections in the pool
-            minPoolSize=1,  # Minimum number of connections in the pool
+            serverSelectionTimeoutMS=2000,  # Reduced from 5000
+            connectTimeoutMS=5000,  # Reduced from 10000
+            socketTimeoutMS=10000,  # Reduced from 20000
+            maxPoolSize=20,  # Increased from 10
+            minPoolSize=5,  # Increased from 1
+            maxIdleTimeMS=30000,  # Add idle timeout
             retryWrites=True,  # Enable retryable writes
             retryReads=True,  # Enable retryable reads
         )

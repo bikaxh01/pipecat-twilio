@@ -13,14 +13,7 @@ def generate_twiml(host: str, body_data: dict = None) -> str:
     connect = Connect()
     stream = Stream(url=websocket_url)
 
-    # Add Pipecat Cloud service host for production
-    env = os.getenv("ENV", "local").lower()
-    if env == "production":
-        agent_name = os.getenv("AGENT_NAME")
-        org_name = os.getenv("ORGANIZATION_NAME")
-        service_host = f"{agent_name}.{org_name}"
-        stream.parameter(name="_pipecatCloudServiceHost", value=service_host)
-
+    
     # Add body parameter (if provided)
     if body_data:
         # Pass each key-value pair as separate parameters instead of JSON string
@@ -63,10 +56,6 @@ def make_twilio_call(
         "from_": from_number,
         "url": twiml_url,
         "method": "POST",
-        "record": True,
-        "recording_status_callback": os.getenv("TWILIO_RECORDING_STATUS_CALLBACK_URL"),
-        "recording_status_callback_method": "POST",
-        "recording_status_callback_event": ["completed"],
     }
 
     # Add status callback if provided
@@ -89,7 +78,7 @@ def make_twilio_call(
         )
 
     call = client.calls.create(
-        **call_params
+        **call_params,
     )
 
     return {"sid": call.sid, "status": call.status}
