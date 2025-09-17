@@ -31,6 +31,11 @@ class CallStatus(str, Enum):
     CANCELED = "canceled"
 
 
+class organization(Document):
+    prompt: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 class PincodeData(Document):
     pincode: str
     home_scan: str
@@ -90,6 +95,7 @@ async def connect_to_db():
             document_models=[
                 Call,
                 PincodeData,
+                organization,
             ],
         )
 

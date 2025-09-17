@@ -5,13 +5,17 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel
 from utils.twilio import generate_twiml, make_twilio_call
 from loguru import logger
 from utils.tools import get_near_by_clinic_data
-from model.model import Call, CallStatus, PincodeData
+from model.model import Call, CallStatus, PincodeData, organization
 
 load_dotenv(override=True)
 
+
+class PromptUpdate(BaseModel):
+    prompt: str
 
 
 app = FastAPI()
@@ -36,7 +40,7 @@ async def startup_db_client():
 
     logger.info("🟢🟢Connecting to MongoDB")
     await connect_to_db()
-    
+
     # Pre-initialize heavy bot components at startup
     logger.info("🚀 Pre-initializing bot components...")
     await initialize_heavy_components()
@@ -57,8 +61,47 @@ async def shutdown_db_client():
 
 @app.get("/")
 async def root():
+    from utils.prompt import get_raw_prompt
+    prompt = await get_raw_prompt()
+    return {"message": "Hello World", "result": prompt}
 
-    return {"message": "Hello World", "result": "result"}
+
+@app.get("/prompt")
+async def prompt_ui():
+    """Serve the HTML UI for editing prompts"""
+    from utils.gardio_ui import create_prompt_ui
+    return HTMLResponse(content=create_prompt_ui())
+
+
+@app.get("/api/get-raw-prompt")
+async def get_raw_prompt_api():
+    """API endpoint to get the current raw prompt"""
+    from utils.prompt import get_raw_prompt
+    try:
+        prompt = await get_raw_prompt()
+        return {"prompt": prompt}
+    except Exception as e:
+        logger.error(f"Error getting raw prompt: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get prompt")
+
+
+@app.post("/api/save-prompt")
+async def save_prompt_api(prompt_data: PromptUpdate):
+    """API endpoint to save a new raw prompt"""
+    from utils.prompt import save_raw_prompt
+    
+    if not prompt_data.prompt.strip():
+        raise HTTPException(status_code=400, detail="Prompt cannot be empty")
+    
+    try:
+        success = await save_raw_prompt(prompt_data.prompt.strip())
+        if success:
+            return {"message": "Prompt saved successfully", "prompt": prompt_data.prompt}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to save prompt")
+    except Exception as e:
+        logger.error(f"Error saving prompt: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save prompt")
 
 
 @app.post("/outbound")
@@ -78,7 +121,7 @@ async def initiate_outbound_call(request: Request) -> JSONResponse:
         # Extract the phone number and name
         phone_number = str(data["phone_number"])
         customer_name = data.get("name", "there")  # Extract name, default to "there"
-        
+
         logger.info(f"Processing outbound call to {phone_number} for {customer_name}")
         print(f"Processing outbound call to {phone_number} for {customer_name}")
 
@@ -135,7 +178,12 @@ async def initiate_outbound_call(request: Request) -> JSONResponse:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
     return JSONResponse(
-        {"call_sid": call_sid, "status": "call_initiated", "phone_number": phone_number, "customer_name": customer_name}
+        {
+            "call_sid": call_sid,
+            "status": "call_initiated",
+            "phone_number": phone_number,
+            "customer_name": customer_name,
+        }
     )
 
 
@@ -205,11 +253,12 @@ async def get_twiml(request: Request) -> HTMLResponse:
             call_record = await Call.find_one({"call_sid": call_sid})
             if call_record and call_record.name:
                 body_data["name"] = call_record.name
-                logger.info(f"Retrieved name from database for TwiML: {call_record.name}")
+                logger.info(
+                    f"Retrieved name from database for TwiML: {call_record.name}"
+                )
         except Exception as e:
             logger.warning(f"Failed to retrieve call data from database: {e}")
             body_data = {}
-
 
     try:
         # Get the server host to construct WebSocket URL
@@ -301,8 +350,6 @@ async def twilio_status_callback(request: Request):
         return JSONResponse(
             content={"error": "Failed to process status callback"}, status_code=500
         )
-
-
 
 
 if __name__ == "__main__":

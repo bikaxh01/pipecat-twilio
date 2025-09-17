@@ -110,7 +110,7 @@ async def run_bot(
 
         # Create dynamic prompt with customer name
         from utils.prompt import create_dynamic_prompt
-        dynamic_prompt = create_dynamic_prompt(customer_name)
+        dynamic_prompt = await create_dynamic_prompt(customer_name)
 
         # Create a new LLM service instance with dynamic prompt
         from pipecat.services.gemini_multimodal_live.gemini import (
