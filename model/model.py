@@ -51,6 +51,7 @@ class Call(Document):
     name: Optional[str] = None  # Add name field for dynamic prompts
     recording_url: Optional[str] = None
     call_cost: Optional[float] = None
+    call_duration: Optional[int] = None  # Call duration in seconds
     transcript: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

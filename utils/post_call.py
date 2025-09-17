@@ -121,6 +121,7 @@ async def call_completion_webhook(call_sid: str, status: str):
             "transcript": call.transcript or "",
             "recording_url": call.recording_url or "",
             "call_cost": call.call_cost or 0.0,
+            "call_duration": call.call_duration or 0,  # Call duration in seconds
             "created_at": call.created_at.isoformat() if call.created_at else None,
             "updated_at": call.updated_at.isoformat() if call.updated_at else None
         }

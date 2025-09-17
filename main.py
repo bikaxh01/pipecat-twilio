@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import uvicorn
 from dotenv import load_dotenv
@@ -320,7 +321,7 @@ async def twilio_status_callback(request: Request):
         print(f"Twilio status callback status: {call_status}")
         print(f"Call duration: {call_duration}")
 
-        # Update call status in database if call_sid exists
+        # Update call status and duration in database if call_sid exists
         if call_sid:
             try:
                 call = await Call.find_one({"call_sid": call_sid})
@@ -338,8 +339,17 @@ async def twilio_status_callback(request: Request):
 
                     if call_status in status_mapping:
                         call.status = status_mapping[call_status]
-                        await call.save()
-                        print(f"Updated call {call_sid} status to {call.status}")
+                    
+                    # Store call duration if provided (in seconds)
+                    if call_duration and call_duration.isdigit():
+                        call.call_duration = int(call_duration)
+                        print(f"Updated call {call_sid} duration to {call.call_duration} seconds")
+                    
+                    # Update the updated_at timestamp
+                    call.updated_at = datetime.utcnow()
+                    
+                    await call.save()
+                    print(f"Updated call {call_sid} status to {call.status}")
             except Exception as e:
                 print(f"Error updating call status in database: {e}")
 
