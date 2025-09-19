@@ -365,8 +365,6 @@ def create_prompt_ui():
             font-size: 13px;
             line-height: 1.4;
             color: #e0e0e0;
-            max-height: 200px;
-            overflow-y: auto;
         }
         
         .call-transcript textarea {
