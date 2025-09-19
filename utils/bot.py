@@ -22,8 +22,6 @@ _initialization_lock = asyncio.Lock()
 load_dotenv(override=True)
 
 
-
-
 async def initialize_heavy_components():
     """Initialize expensive components once at startup"""
     global _tools_schema, _cost_tracker, _session
@@ -102,14 +100,17 @@ async def run_bot(
         # The name is nested under 'body' in call_data
         body_data = call_data.get("body", {})
         customer_name = body_data.get("name", "there")
-        
+
         if customer_name != "there":
-            logger.info(f"🚀 OPTIMIZED: Using customer name from URL parameters: {customer_name}")
+            logger.info(
+                f"🚀 OPTIMIZED: Using customer name from URL parameters: {customer_name}"
+            )
         else:
             logger.info("📝 No name found in URL parameters, using default 'there'")
 
         # Create dynamic prompt with customer name
         from utils.prompt import create_dynamic_prompt
+
         dynamic_prompt = await create_dynamic_prompt(customer_name)
 
         # Create a new LLM service instance with dynamic prompt
@@ -134,6 +135,7 @@ async def run_bot(
 
         # Register function handlers
         from utils.tool_schema import _handle_get_nearby_clinics, _handle_end_call
+
         llm.register_function("get_nearby_clinics", _handle_get_nearby_clinics)
         llm.register_function("end_call", _handle_end_call)
         messages = [
@@ -180,7 +182,7 @@ async def run_bot(
             ]
         )
         idle_timeout_secs = os.getenv("IDLE_TIMEOUT_SECS", 20)
-        
+
         task = PipelineTask(
             pipeline,
             params=PipelineParams(
@@ -190,9 +192,7 @@ async def run_bot(
                 enable_metrics=True,
                 enable_usage_metrics=True,
             ),
-            
             idle_timeout_secs=int(idle_timeout_secs),  # 20 seconds
-            
             cancel_on_idle_timeout=False,  # Don't auto-cancel
             observers=[RTVIObserver(rtvi)],
         )
@@ -253,46 +253,57 @@ async def run_bot(
         async def on_audio_data(buffer, audio, sample_rate, num_channels):
             server_name = f"server_{call_data['call_id']}"
             await save_audio(server_name, audio, sample_rate, num_channels)
-            
 
         @transport.event_handler("on_client_disconnected")
         async def on_client_disconnected(transport, client):
             summary = cost_tracker.get_final_summary()
             transcript_text = "\n".join(transcript_list)
-            
+
             print(f"   Total Cost: ${summary['total_cost']:.2f}")
             logger.info(f"Client disconnected ❌❌❌")
-            
+
             # Stop audio recording first to ensure file writing is complete
             try:
                 await audiobuffer.stop_recording()
-                logger.info(f"🎬 Audio recording stopped for call {call_data['call_id']}")
+                logger.info(
+                    f"🎬 Audio recording stopped for call {call_data['call_id']}"
+                )
             except Exception as e:
                 logger.warning(f"Failed to stop audio recording: {e}")
-            
+
             # Add a small delay to ensure file writing is complete
             await asyncio.sleep(0.5)  # 500ms delay
-            
+
             # Finalize audio recording and trigger upload
             try:
                 server_name = f"server_{call_data['call_id']}"
                 call_cost = float(summary.get("total_cost", 0.0))
-                await finalize_audio_recording(call_data['call_id'], server_name, transcript_text, call_cost)
-                logger.info(f"🎬 Audio recording finalized for call {call_data['call_id']}")
+                await finalize_audio_recording(
+                    call_data["call_id"], server_name, transcript_text, call_cost
+                )
+                logger.info(
+                    f"🎬 Audio recording finalized for call {call_data['call_id']}"
+                )
             except Exception as e:
                 logger.error(f"❌ Failed to finalize audio recording: {e}")
                 # Fallback to old method if finalization fails
                 try:
                     call_cost = float(summary.get("total_cost", 0.0))
-                    asyncio.create_task(delayed_background_processing(
-                        call_sid=str(call_data["call_id"]),
-                        transcript=str(transcript_text),
-                        call_cost=call_cost,
-                        status="completed"
-                    ))
-                    logger.info(f"🚀 Fallback background processing started for call {call_data['call_id']}")
+                    asyncio.create_task(
+                        delayed_background_processing(
+                            call_sid=str(call_data["call_id"]),
+                            transcript=str(transcript_text),
+                            call_cost=call_cost,
+                            status="completed",
+                        )
+                    )
+                    logger.info(
+                        f"🚀 Fallback background processing started for call {call_data['call_id']}"
+                    )
                 except Exception as fallback_error:
-                    logger.error(f"❌ Fallback background processing also failed: {fallback_error}")
+                    logger.error(
+                        f"❌ Fallback background processing also failed: {fallback_error}"
+                    )
 
             await task.cancel()
 
@@ -314,9 +325,16 @@ async def bot(runner_args):
         FastAPIWebsocketTransport,
     )
     from pipecat.audio.vad.silero import SileroVADAnalyzer
+    from utils.bot_2 import run_bot_2
+    from model.model import Call
 
     transport_type, call_data = await parse_telephony_websocket(runner_args.websocket)
     logger.info(f"Auto-detected transport: {transport_type}")
+
+    # write Db query to get multimode from call sid
+    call = await Call.find_one({"call_sid": call_data["call_id"]})
+    multimode = call.multimodel if call else True  # Default to True if call not found
+    logger.info(f"Multimode setting for call {call_data['call_id']}: {multimode}")
 
     serializer = TwilioFrameSerializer(
         stream_sid=call_data["stream_id"],
@@ -337,6 +355,7 @@ async def bot(runner_args):
     )
     handle_sigint = runner_args.handle_sigint
 
-    logger.info(f"Transport 🟢🟢: {handle_sigint}")
-
-    await run_bot(transport, handle_sigint, call_data)
+    if multimode:
+        await run_bot(transport, handle_sigint, call_data)
+    else:
+        await run_bot_2(transport, handle_sigint, call_data)

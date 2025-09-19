@@ -69,7 +69,7 @@ async def process_call_completion_background(
                 
                 # Clean up local file after successful upload
                 try:
-                    # os.remove(latest_file)
+                    os.remove(latest_file)
                     logger.info(f"🗑️ Cleaned up local file: {latest_file}")
                 except Exception as cleanup_error:
                     logger.warning(f"Failed to clean up local file: {cleanup_error}")

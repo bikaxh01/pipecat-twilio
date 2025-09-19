@@ -3,7 +3,9 @@ from datetime import datetime
 from loguru import logger
 
 
-async def create_dynamic_prompt(customer_name: str = "there") -> str:
+async def create_dynamic_prompt(
+    customer_name: str = "there", multimodel: bool = True
+) -> str:
     """Create a dynamic prompt with the customer's name"""
     from model.model import organization
 
@@ -17,7 +19,11 @@ async def create_dynamic_prompt(customer_name: str = "there") -> str:
             logger.warning("No prompts found in database, using fallback")
             return fallback_prompt
 
-        prompt = prompts[0].prompt
+        prompt = ""
+        if multimodel:
+            prompt = prompts[0].prompt
+        else:
+            prompt = prompts[1].prompt
         logger.info(f"Using prompt from database for customer: {customer_name}")
 
         # Replace the {name} placeholder in the base prompt
@@ -33,7 +39,7 @@ async def create_dynamic_prompt(customer_name: str = "there") -> str:
         return fallback_prompt
 
 
-async def get_raw_prompt() -> str:
+async def get_raw_prompt(multimodel: bool = True) -> str:
     """Get the raw prompt from database"""
     from model.model import organization
 
@@ -44,8 +50,12 @@ async def get_raw_prompt() -> str:
         if not prompts:
             logger.warning("No prompts found in database")
             return ""
+        prompt = ""
+        if multimodel:
+            prompt = prompts[0].prompt
+        else:
+            prompt = prompts[1].prompt
 
-        prompt = prompts[0].prompt
         return prompt
 
     except Exception as e:
@@ -53,27 +63,22 @@ async def get_raw_prompt() -> str:
         return ""
 
 
-async def save_raw_prompt(new_prompt: str) -> bool:
+async def save_raw_prompt(new_prompt: str, multimodel: bool = True) -> bool:
     """Save a new raw prompt to the database"""
     from model.model import organization
 
     try:
         # Get existing prompts
         prompts = await organization.find_many().to_list()
-        
+
         if prompts:
             # Update existing prompt
-            existing_prompt = prompts[0]
+            existing_prompt = prompts[0] if multimodel else prompts[1]
             existing_prompt.prompt = new_prompt
             existing_prompt.updated_at = datetime.utcnow()
             await existing_prompt.save()
             logger.info("Updated existing prompt in database")
-        else:
-            # Create new prompt document
-            new_org = organization(prompt=new_prompt)
-            await new_org.insert()
-            logger.info("Created new prompt in database")
-        
+
         return True
 
     except Exception as e:

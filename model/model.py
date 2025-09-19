@@ -49,6 +49,7 @@ class Call(Document):
     status: str = CallStatus.RINGING
     phone_number: str
     name: Optional[str] = None  # Add name field for dynamic prompts
+    multimodel: bool = True  # Add multimodel field with default value True
     recording_url: Optional[str] = None
     call_cost: Optional[float] = None
     call_duration: Optional[int] = None  # Call duration in seconds

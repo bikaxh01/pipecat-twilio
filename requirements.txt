@@ -1,4 +1,4 @@
-pipecat-ai[websocket,silero,runner,webrtc,google]
+pipecat-ai[websocket,silero,deepgram,runner,webrtc,google,openai]
 twilio
 motor
 beanie
