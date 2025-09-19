@@ -365,8 +365,53 @@ def create_prompt_ui():
             font-size: 13px;
             line-height: 1.4;
             color: #e0e0e0;
-            max-height: 100px;
+            max-height: 200px;
             overflow-y: auto;
+        }
+        
+        .call-transcript textarea {
+            width: 100%;
+            min-height: 80px;
+            max-height: 200px;
+            padding: 8px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 13px;
+            line-height: 1.4;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        
+        .call-transcript textarea:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+        }
+        
+        .transcript-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .copy-transcript-btn {
+            padding: 4px 8px;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .copy-transcript-btn:hover {
+            background: #357abd;
         }
         
         .call-audio {
@@ -479,7 +524,7 @@ def create_prompt_ui():
         </div>
         
         <div class="right-panel">
-            <h1>Prompt Editor</h1>
+        <h1>Prompt Editor</h1>
             <div style="text-align: center; margin-bottom: 20px; color: #b0b0b0; font-size: 14px;">
                 Bot type is controlled by the dropdown in the call section
             </div>
@@ -746,8 +791,11 @@ def create_prompt_ui():
                     
                     ${currentCall.transcript ? `
                         <div class="call-transcript">
-                            <strong>Transcript:</strong><br>
-                            ${currentCall.transcript}
+                            <div class="transcript-header">
+                                <strong>Transcript:</strong>
+                                <button class="copy-transcript-btn" onclick="copyTranscript()">Copy</button>
+                            </div>
+                            <textarea readonly id="transcriptTextarea">${currentCall.transcript}</textarea>
                         </div>
                     ` : ''}
                     
@@ -899,6 +947,32 @@ def create_prompt_ui():
         
         // Make it available globally for testing
         window.forceStopPolling = forceStopPolling;
+        
+        // Copy transcript function
+        async function copyTranscript() {
+            const textarea = document.getElementById('transcriptTextarea');
+            if (textarea) {
+                try {
+                    // Try modern clipboard API first
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(textarea.value);
+                        showMessage('Transcript copied to clipboard!', 'success');
+                    } else {
+                        // Fallback for older browsers
+                        textarea.select();
+                        textarea.setSelectionRange(0, 99999);
+                        document.execCommand('copy');
+                        showMessage('Transcript copied to clipboard!', 'success');
+                    }
+                } catch (err) {
+                    console.error('Failed to copy transcript:', err);
+                    showMessage('Failed to copy transcript', 'error');
+                }
+            }
+        }
+        
+        // Make copy function available globally
+        window.copyTranscript = copyTranscript;
         
         // Cleanup polling interval on page unload
         window.addEventListener('beforeunload', () => {
