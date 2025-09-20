@@ -11,7 +11,7 @@ from utils.bot_2 import PROMPT
 from utils.twilio import generate_twiml, make_twilio_call
 from loguru import logger
 from utils.tools import get_near_by_clinic_data
-from model.model import Call, CallStatus, PincodeData, organization
+from model.model import Call, CallStatus, PincodeData, organization, STTProvider, TTSProvider
 
 load_dotenv(override=True)
 
@@ -65,14 +65,16 @@ async def shutdown_db_client():
 @app.get("/")
 async def root():
     from utils.prompt import get_raw_prompt
+
     prompt = await get_raw_prompt(multimodel=False)
-    return {"message": "Hello World", "result":prompt}
+    return {"message": "Hello World", "result": prompt}
 
 
 @app.get("/prompt")
 async def prompt_ui():
     """Serve the HTML UI for editing prompts"""
     from utils.gardio_ui import create_prompt_ui
+
     return HTMLResponse(content=create_prompt_ui())
 
 
@@ -80,6 +82,7 @@ async def prompt_ui():
 async def get_raw_prompt_api(multimodel: bool = True):
     """API endpoint to get the current raw prompt"""
     from utils.prompt import get_raw_prompt
+
     try:
         prompt = await get_raw_prompt(multimodel=multimodel)
         return {"prompt": prompt}
@@ -92,19 +95,25 @@ async def get_raw_prompt_api(multimodel: bool = True):
 async def save_prompt_api(prompt_data: PromptUpdate):
     """API endpoint to save a new raw prompt"""
     from utils.prompt import save_raw_prompt
-    
+
     if not prompt_data.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
-    
+
     try:
-        success = await save_raw_prompt(prompt_data.prompt.strip(), multimodel=prompt_data.multimodel)
+        success = await save_raw_prompt(
+            prompt_data.prompt.strip(), multimodel=prompt_data.multimodel
+        )
         if success:
-            return {"message": "Prompt saved successfully", "prompt": prompt_data.prompt}
+            return {
+                "message": "Prompt saved successfully",
+                "prompt": prompt_data.prompt,
+            }
         else:
             raise HTTPException(status_code=500, detail="Failed to save prompt")
     except Exception as e:
         logger.error(f"Error saving prompt: {e}")
         raise HTTPException(status_code=500, detail="Failed to save prompt")
+
 
 @app.get("/api/call-details/{call_sid}")
 async def get_call_details(call_sid: str):
@@ -113,7 +122,7 @@ async def get_call_details(call_sid: str):
         call_record = await Call.find_one({"call_sid": call_sid})
         if not call_record:
             raise HTTPException(status_code=404, detail="Call not found")
-        
+
         return {
             "call_sid": call_record.call_sid,
             "status": call_record.status,
@@ -121,17 +130,58 @@ async def get_call_details(call_sid: str):
             "name": call_record.name,
             "multimodel": call_record.multimodel,
             "recording_url": call_record.recording_url,
+            "stt_provider": call_record.stt_provider,
+            "tts_provider": call_record.tts_provider,
+            "llm_provider": call_record.llm_provider,
             "call_cost": call_record.call_cost,
             "call_duration": call_record.call_duration,
             "transcript": call_record.transcript,
-            "created_at": call_record.created_at.isoformat() if call_record.created_at else None,
-            "updated_at": call_record.updated_at.isoformat() if call_record.updated_at else None
+            "created_at": (
+                call_record.created_at.isoformat() if call_record.created_at else None
+            ),
+            "updated_at": (
+                call_record.updated_at.isoformat() if call_record.updated_at else None
+            ),
         }
     except Exception as e:
         logger.error(f"Error getting call details: {e}")
         raise HTTPException(status_code=500, detail="Failed to get call details")
 
 
+@app.get("/api/latest-calls")
+async def get_latest_calls():
+    """API endpoint to get 5 latest calls"""
+    try:
+        # Get 5 latest calls ordered by created_at descending
+        calls = await Call.find_all().sort([("created_at", -1)]).limit(5).to_list()
+        
+        latest_calls = []
+        for call_record in calls:
+            latest_calls.append({
+                "call_sid": call_record.call_sid,
+                "status": call_record.status,
+                "phone_number": call_record.phone_number,
+                "name": call_record.name,
+                "multimodel": call_record.multimodel,
+                "recording_url": call_record.recording_url,
+                "stt_provider": call_record.stt_provider,
+                "tts_provider": call_record.tts_provider,
+                "llm_provider": call_record.llm_provider,
+                "call_cost": call_record.call_cost,
+                "call_duration": call_record.call_duration,
+                "transcript": call_record.transcript,
+                "created_at": (
+                    call_record.created_at.isoformat() if call_record.created_at else None
+                ),
+                "updated_at": (
+                    call_record.updated_at.isoformat() if call_record.updated_at else None
+                ),
+            })
+        
+        return {"calls": latest_calls}
+    except Exception as e:
+        logger.error(f"Error fetching latest calls: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch latest calls")
 
 
 @app.post("/outbound")
@@ -148,13 +198,36 @@ async def initiate_outbound_call(request: Request) -> JSONResponse:
                 status_code=400, detail="Missing 'phone_number' in the request body"
             )
 
-        # Extract the phone number, name, and multimodel setting
+        # Extract the phone number, name, multimodel setting, and providers
         phone_number = str(data["phone_number"])
         customer_name = data.get("name", "there")  # Extract name, default to "there"
         multimodel = data.get("multimodel", True)  # Extract multimodel, default to True
+        stt_provider_str = data.get("stt_provider", None)
+        tts_provider_str = data.get("tts_provider", None)
+        llm_provider_str = data.get("llm_provider", None)
+        logger.info(f"STT provider: {stt_provider_str}")
+        logger.info(f"TTS provider: {tts_provider_str}")
+        logger.info(f"LLM provider: {llm_provider_str}")
 
-        logger.info(f"Processing outbound call to {phone_number} for {customer_name} (multimodel: {multimodel})")
-        print(f"Processing outbound call to {phone_number} for {customer_name} (multimodel: {multimodel})")
+        # Map string to STTProvider enum using the utility method
+        if not multimodel:
+            if stt_provider_str:
+                stt_provider_str = STTProvider.from_string(
+                    stt_provider_str, default=STTProvider.DEEPGRAM
+                )
+        
+        # Map string to TTSProvider enum using the utility method
+        if tts_provider_str:
+            tts_provider_str = TTSProvider.from_string(
+                tts_provider_str, default=TTSProvider.SARVAM_AI
+            )
+
+        logger.info(
+            f"Processing outbound call to {phone_number} for {customer_name} (multimodel: {multimodel})"
+        )
+        print(
+            f"Processing outbound call to {phone_number} for {customer_name} (multimodel: {multimodel})"
+        )
 
         # Extract body data if provided
         body_data = data.get("body", {})
@@ -188,13 +261,17 @@ async def initiate_outbound_call(request: Request) -> JSONResponse:
             )
             call_sid = call_result["sid"]
 
-            # Store call data in database (including customer name and multimodel setting)
+            # Store call data in database (including customer name, multimodel setting, and providers)
+
             await Call.insert_one(
                 Call(
                     call_sid=call_sid,
                     phone_number=phone_number,
                     name=customer_name,  # Store the customer name in DB
                     multimodel=multimodel,  # Store the multimodel setting in DB
+                    stt_provider=stt_provider_str,
+                    tts_provider=tts_provider_str,
+                    llm_provider=llm_provider_str,
                 )
             )
         except Exception as e:
@@ -318,6 +395,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     print("WebSocket connection accepted for outbound call")
     from utils.bot_2 import bot_2
+
     try:
         # Import the bot function from the bot module
         from utils.bot import bot
@@ -328,7 +406,7 @@ async def websocket_endpoint(websocket: WebSocket):
         runner_args.handle_sigint = False
 
         await bot(runner_args)
-        
+
     except Exception as e:
         print(f"Error in WebSocket endpoint: {e}")
         await websocket.close()
@@ -370,15 +448,17 @@ async def twilio_status_callback(request: Request):
 
                     if call_status in status_mapping:
                         call.status = status_mapping[call_status]
-                    
+
                     # Store call duration if provided (in seconds)
                     if call_duration and call_duration.isdigit():
                         call.call_duration = int(call_duration)
-                        print(f"Updated call {call_sid} duration to {call.call_duration} seconds")
-                    
+                        print(
+                            f"Updated call {call_sid} duration to {call.call_duration} seconds"
+                        )
+
                     # Update the updated_at timestamp
                     call.updated_at = datetime.utcnow()
-                    
+
                     await call.save()
                     print(f"Updated call {call_sid} status to {call.status}")
             except Exception as e:

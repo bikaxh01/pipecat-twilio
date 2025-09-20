@@ -43,88 +43,6 @@ from model.model import Call, CallStatus
 load_dotenv(override=True)
 
 
-# Cost Tracker class for bot_2
-class CostTracker:
-    def __init__(self):
-        self.total_cost = 0.0
-        self.sessions = []
-        self.stt_cost = 0.0
-        self.tts_cost = 0.0
-        self.llm_cost = 0.0
-
-    def calculate_llm_cost(self, input_tokens: int, output_tokens: int) -> float:
-        # OpenAI GPT-4o-mini pricing per 1M tokens
-        input_cost = (input_tokens / 1_000_000) * 0.15  # Input tokens
-        output_cost = (output_tokens / 1_000_000) * 0.60  # Output tokens
-        return input_cost + output_cost
-
-    def calculate_stt_cost(self, audio_seconds: float) -> float:
-        # Deepgram STT pricing: $0.0043 per minute (per second = $0.0043/60)
-        return audio_seconds * (0.0043 / 60)
-
-    def calculate_tts_cost(self, characters: int) -> float:
-        # Sarvam TTS pricing: ₹0.0015 per character (₹1.5 per 1000 characters)
-        return characters * 0.0015
-
-    def log_llm_usage(self, input_tokens: int, output_tokens: int):
-        cost = self.calculate_llm_cost(input_tokens, output_tokens)
-        self.llm_cost += cost
-        self.total_cost += cost
-
-        session_data = {
-            "type": "llm",
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "cost": cost,
-        }
-        self.sessions.append(session_data)
-
-        return cost
-
-    def log_stt_usage(self, audio_seconds: float):
-        cost = self.calculate_stt_cost(audio_seconds)
-        self.stt_cost += cost
-        self.total_cost += cost
-
-        session_data = {"type": "stt", "audio_seconds": audio_seconds, "cost": cost}
-        self.sessions.append(session_data)
-
-        return cost
-
-    def log_tts_usage(self, characters: int):
-        cost = self.calculate_tts_cost(characters)
-        self.tts_cost += cost
-        self.total_cost += cost
-
-        session_data = {"type": "tts", "characters": characters, "cost": cost}
-        self.sessions.append(session_data)
-
-        return cost
-
-    def get_final_summary(self):
-        """Get final cost summary for the call."""
-        llm_sessions = [s for s in self.sessions if s["type"] == "llm"]
-        stt_sessions = [s for s in self.sessions if s["type"] == "stt"]
-        tts_sessions = [s for s in self.sessions if s["type"] == "tts"]
-
-        total_input_tokens = sum(s.get("input_tokens", 0) for s in llm_sessions)
-        total_output_tokens = sum(s.get("output_tokens", 0) for s in llm_sessions)
-        total_audio_seconds = sum(s.get("audio_seconds", 0) for s in stt_sessions)
-        total_characters = sum(s.get("characters", 0) for s in tts_sessions)
-
-        return {
-            "llm": {
-                "input_tokens": total_input_tokens,
-                "output_tokens": total_output_tokens,
-                "cost": self.llm_cost,
-            },
-            "stt": {"audio_seconds": total_audio_seconds, "cost": self.stt_cost},
-            "tts": {"characters": total_characters, "cost": self.tts_cost},
-            "total_cost": self.total_cost,
-            "total_sessions": len(self.sessions),
-        }
-
-
 async def run_bot_2(
     transport,  # Will be BaseTransport when imported
     handle_sigint: bool,
@@ -132,38 +50,28 @@ async def run_bot_2(
 ):
     logger.info(f"Starting bot")
 
-    # Initialize cost tracker for bot_2
-    cost_tracker = CostTracker()
-
     session = aiohttp.ClientSession()
 
     try:
-        tts = SarvamTTSService(
-            api_key=os.getenv("SARVAM_API_KEY"),
-            aiohttp_session=session,
-            voice_id="anushka",
-            model="bulbul:v2",
-            sample_rate=8000,  # Match Twilio's audio format
-            params=SarvamTTSService.InputParams(
-                language=Language.HI, pitch=0.0, pace=1.0, loudness=1.0
-            ),
+        from utils.call_config import (
+            get_providers_from_call,
+            get_stt_service_config,
+            get_tts_service_config,
         )
-        # tts = DeepgramTTSService(
-        #     api_key=os.getenv("DEEPGRAM_API_KEY"),
-        #     voice="aura-2-andromeda-en",
-        #     sample_rate=24000,
-        #     encoding="linear16",
-        # )
 
-        stt = DeepgramSTTService(
-            api_key=os.getenv("DEEPGRAM_API_KEY"),
-            live_options=LiveOptions(
-                language=Language.HI, 
-                model="nova-2-general",
-                sample_rate=8000,  # Match Twilio's audio format
-                encoding="linear16"
-            ),
+        logger.info(f"Call data: 🟢🟢🟢🟢{call_data}")
+
+        # Get both STT and TTS providers from a single DB call
+        stt_provider, tts_provider, llm_provider = await get_providers_from_call(
+            call_data["call_id"]
         )
+        logger.info(f"STT provider: {stt_provider}, TTS provider: {tts_provider}")
+
+        # Get STT service configuration
+        stt = get_stt_service_config(stt_provider)
+
+        # Get TTS service configuration
+        tts = get_tts_service_config(tts_provider, session)
 
         # Build function schemas for tool calls
         tools_schema = ToolsSchema(
@@ -173,17 +81,12 @@ async def run_bot_2(
             ]
         )
 
-        # Create LLM service with search grounding
-        # llm = GoogleLLMService(
-        #     api_key=os.getenv("GOOGLE_API_KEY"),
-        #     model="gemini-1.5-flash-002",
-        #     system_instruction=dynamic_prompt,
-        # )
+        from utils.call_config import get_llm_service_config
 
-        llm = OpenAILLMService(
-            model="gpt-4o-mini-2024-07-18",
-            api_key=os.getenv("OPENAI_API_KEY"),
-        )
+        llm = get_llm_service_config(llm_provider)
+        logger.info(f"STT service: 🟢🟢🟢🟢{stt}")
+        logger.info(f"LLM service: 🟢🟢🟢🟢{llm}")
+        logger.info(f"TTS service: 🟢🟢🟢🟢{tts}")
 
         # register handlers with the LLM service
         llm.register_function("get_nearby_clinics", _handle_get_nearby_clinics)
@@ -208,7 +111,7 @@ async def run_bot_2(
 
         rtvi = RTVIProcessor(config=RTVIConfig(config=[]))
         transcript = TranscriptProcessor()
-        
+
         # Create an audio buffer processor to capture conversation audio
         audiobuffer = AudioBufferProcessor(
             sample_rate=None,
@@ -216,20 +119,11 @@ async def run_bot_2(
             buffer_size=0,
             enable_turn_audio=False,
         )
-        
+
         # Initialize transcript list for tracking
         transcript_list = []
 
-        # Override the start_llm_usage_metrics method to capture cost data
-        original_start_llm_usage_metrics = llm.start_llm_usage_metrics
-
-        async def custom_start_llm_usage_metrics(tokens):
-            cost_tracker.log_llm_usage(tokens.prompt_tokens, tokens.completion_tokens)
-            return await original_start_llm_usage_metrics(tokens)
-
-        llm.start_llm_usage_metrics = custom_start_llm_usage_metrics
-
-        # Track STT costs through transcript updates
+        # Track transcript updates
         @transcript.event_handler("on_transcript_update")
         async def handle_transcript_update(processor, frame):
             logger.info(
@@ -242,12 +136,11 @@ async def run_bot_2(
                     # Average word length is about 5 characters
                     text_length = len(msg.content)
                     estimated_duration = (text_length / 5) / 2.5  # Convert to seconds
-                    cost_tracker.log_stt_usage(estimated_duration)
 
                     # Add to transcript list for post-call processing
                     line = f"{msg.role}: {msg.content}"
                     transcript_list.append(line)
-                    
+
                     # Log transcript to file
                     try:
                         import aiofiles
@@ -260,13 +153,6 @@ async def run_bot_2(
                         logger.warning(f"Failed to write transcript to file: {e}")
                 else:
                     logger.info(f"🔍 Non-transcription message: {type(msg)} - {msg}")
-
-        # Track TTS costs through TTS audio frames
-        @tts.event_handler("on_tts_started")
-        async def on_tts_started(processor, frame):
-            if hasattr(frame, "text") and frame.text:
-                character_count = len(frame.text)
-                cost_tracker.log_tts_usage(character_count)
 
         pipeline = Pipeline(
             [
@@ -334,42 +220,51 @@ async def run_bot_2(
 
         @transport.event_handler("on_client_disconnected")
         async def on_client_disconnected(transport, client):
-            summary = cost_tracker.get_final_summary()
+
             transcript_text = "\n".join(transcript_list)
-            
-            print(f"   Total Cost: ${summary['total_cost']:.2f}")
+
             logger.info(f"Client disconnected ❌❌❌")
-            
+
             # Stop audio recording first to ensure file writing is complete
             try:
                 await audiobuffer.stop_recording()
-                logger.info(f"🎬 Audio recording stopped for call {call_data['call_id']}")
+                logger.info(
+                    f"🎬 Audio recording stopped for call {call_data['call_id']}"
+                )
             except Exception as e:
                 logger.warning(f"Failed to stop audio recording: {e}")
-            
+
             # Add a small delay to ensure file writing is complete
             await asyncio.sleep(0.5)  # 500ms delay
-            
+
             # Finalize audio recording and trigger upload
             try:
                 server_name = f"server_{call_data['call_id']}"
-                call_cost = float(summary.get("total_cost", 0.0))
-                await finalize_audio_recording(call_data['call_id'], server_name, transcript_text, call_cost)
-                logger.info(f"🎬 Audio recording finalized for call {call_data['call_id']}")
+                await finalize_audio_recording(
+                    call_data["call_id"], server_name, transcript_text, 0.0
+                )
+                logger.info(
+                    f"🎬 Audio recording finalized for call {call_data['call_id']}"
+                )
             except Exception as e:
                 logger.error(f"❌ Failed to finalize audio recording: {e}")
                 # Fallback to old method if finalization fails
                 try:
-                    call_cost = float(summary.get("total_cost", 0.0))
-                    asyncio.create_task(delayed_background_processing(
-                        call_sid=str(call_data["call_id"]),
-                        transcript=str(transcript_text),
-                        call_cost=call_cost,
-                        status="completed"
-                    ))
-                    logger.info(f"🚀 Fallback background processing started for call {call_data['call_id']}")
+                    asyncio.create_task(
+                        delayed_background_processing(
+                            call_sid=str(call_data["call_id"]),
+                            transcript=str(transcript_text),
+                            call_cost=0.0,
+                            status="completed",
+                        )
+                    )
+                    logger.info(
+                        f"🚀 Fallback background processing started for call {call_data['call_id']}"
+                    )
                 except Exception as fallback_error:
-                    logger.error(f"❌ Fallback background processing also failed: {fallback_error}")
+                    logger.error(
+                        f"❌ Fallback background processing also failed: {fallback_error}"
+                    )
 
             await task.cancel()
 
@@ -377,24 +272,6 @@ async def run_bot_2(
 
         await runner.run(task)
     finally:
-        # Final cost summary for bot_2 (in case of exceptions)
-        try:
-            summary = cost_tracker.get_final_summary()
-            logger.info(f"💰 Bot_2 Final Call Cost Summary:")
-            logger.info(
-                f"   LLM - Input Tokens: {summary['llm']['input_tokens']:,}, Output Tokens: {summary['llm']['output_tokens']:,}, Cost: ${summary['llm']['cost']:.4f}"
-            )
-            logger.info(
-                f"   STT - Audio Seconds: {summary['stt']['audio_seconds']:.2f}, Cost: ${summary['stt']['cost']:.4f}"
-            )
-            logger.info(
-                f"   TTS - Characters: {summary['tts']['characters']:,}, Cost: ${summary['tts']['cost']:.4f}"
-            )
-            logger.info(f"   Total Cost: ${summary['total_cost']:.4f}")
-            logger.info(f"   Total Sessions: {summary['total_sessions']}")
-        except Exception as e:
-            logger.warning(f"Failed to log bot_2 cost summary: {e}")
-
         await session.close()
 
 
@@ -412,7 +289,10 @@ async def bot_2(runner_args, call_data=None):
     # Use provided call_data or parse from WebSocket
     if call_data is None:
         from pipecat.runner.utils import parse_telephony_websocket
-        transport_type, call_data = await parse_telephony_websocket(runner_args.websocket)
+
+        transport_type, call_data = await parse_telephony_websocket(
+            runner_args.websocket
+        )
         logger.info(f"Auto-detected transport: {transport_type}")
     else:
         logger.info(f"Using provided call_data: {call_data}")

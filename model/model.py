@@ -31,10 +31,110 @@ class CallStatus(str, Enum):
     CANCELED = "canceled"
 
 
+class STTProvider(str, Enum):
+    """Speech-to-Text provider options"""
+
+    AWS_TRANSCRIBE = "aws_transcribe"
+    AZURE = "azure"
+    CARTESIA = "cartesia"
+    DEEPGRAM = "deepgram"
+    FAL_WIZPER = "fal_wizper"
+    GLADIA = "gladia"
+    GOOGLE = "google"
+    SONIOX = "soniox"
+    GROQ = "groq"
+
+    @classmethod
+    def from_string(
+        cls, value: str, default: "STTProvider" = None
+    ) -> Optional["STTProvider"]:
+        """
+        Convert string to STTProvider enum with fallback options.
+
+        Args:
+            value: String value to convert
+            default: Default value to return if conversion fails
+
+        Returns:
+            STTProvider enum or None if conversion fails and no default provided
+        """
+        if not value:
+            return default
+
+        # Method 1: Direct mapping by value
+        try:
+            return cls(value)
+        except ValueError:
+            pass
+
+        # Method 2: Case-insensitive mapping
+        value_lower = value.lower()
+        for provider in cls:
+            if provider.value.lower() == value_lower:
+                return provider
+
+        # Method 3: Partial matching (e.g., "google" matches "GOOGLE")
+        for provider in cls:
+            if provider.name.lower() == value_lower:
+                return provider
+
+        return default
+
+
+class TTSProvider(str, Enum):
+    """Text-to-Speech provider options"""
+
+    CARTESIA = "cartesia"
+
+    ELEVENLABS = "elevenlabs"
+
+    SARVAM_AI = "sarvam_ai"
+
+    @classmethod
+    def from_string(
+        cls, value: str, default: "TTSProvider" = None
+    ) -> Optional["TTSProvider"]:
+        """
+        Convert string to TTSProvider enum with fallback options.
+
+        Args:
+            value: String value to convert
+            default: Default value to return if conversion fails
+
+        Returns:
+            TTSProvider enum or None if conversion fails and no default provided
+        """
+        if not value:
+            return default
+
+        # Method 1: Direct mapping by value
+        try:
+            return cls(value)
+        except ValueError:
+            pass
+
+        # Method 2: Case-insensitive mapping
+        value_lower = value.lower()
+        for provider in cls:
+            if provider.value.lower() == value_lower:
+                return provider
+
+        # Method 3: Partial matching (e.g., "google" matches "GOOGLE")
+        for provider in cls:
+            if provider.name.lower() == value_lower:
+                return provider
+
+        return default
+
+
+
+
+
 class organization(Document):
     prompt: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 class PincodeData(Document):
     pincode: str
@@ -46,11 +146,14 @@ class PincodeData(Document):
 
 class Call(Document):
     call_sid: str
-    status: str = CallStatus.RINGING
+    status: CallStatus = CallStatus.RINGING
     phone_number: str
     name: Optional[str] = None  # Add name field for dynamic prompts
     multimodel: bool = True  # Add multimodel field with default value True
     recording_url: Optional[str] = None
+    stt_provider: Optional[STTProvider] = None
+    tts_provider: Optional[TTSProvider] = None
+    llm_provider: Optional[str] = None  # LLM provider (gemini or openai)
     call_cost: Optional[float] = None
     call_duration: Optional[int] = None  # Call duration in seconds
     transcript: Optional[str] = None

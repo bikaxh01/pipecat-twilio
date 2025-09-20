@@ -135,3 +135,148 @@ assistant: We received an inquiry from this number about teeth alignment. Are yo
 user: Sir
 user: Can you end the call?
 assistant: Thanks for calling, goodbye!
+user: Hello.
+assistant: मैं Toothsi की तरफ से Neha बोल रही हूँ। there जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: हां हां बिल्कुल सही.
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: तेरह सात.
+assistant: आपकी problem समझ गई। Nearby options के लिए pincode या city बताएं?
+user: 1 double 2 double 0 1.
+assistant: Confirm कर लूं - आपने एक दो दो दो zero एक बोला, सही है ना?
+user: हां हां.
+assistant: Great!  आपके area में clinics हैं: 
+
+- पहला, सेक्टर चौदह, गुड़गाँव  
+- दूसरा, ग्रीन पार्क  
+
+हम एक home scan भी offer करते हैं।  कौन सा option आपके लिए बेहतर है?
+user: Green power home scan.
+assistant: Great choice! मैं अभी आपकी call को हमारे booking agent को transfer कर रही हूँ।
+user: Bye.
+assistant: No problem!  Whenever you're ready for your perfect smile, we're here. Have a great day!
+user: भाई sir.
+user: Bye.
+assistant: Thanks for calling, goodbye!
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user:  और बिल्कुल कर
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user:  तेरे दा
+assistant: मैंने आपकी concern समझी। क्या आप पincode या city बताकर मुझे बता सकते हैं ताकि मैं nearby options चेक कर सकूँ?
+assistant: नमस्ते! मैं Toothsi की तरफ से Neha बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: हां हां correct.
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: Hello.
+assistant: I heard you say hello! Perfect! What's your main concern with your teeth — crooked teeth, gaps, or something else?
+user:  वटेवाद
+user:  झाल
+user:  झाल
+user:  झाल
+user:  अब अब अब अब
+assistant: मैं Toothsi की तरफ से Neha बोल रही हूँ। आपकी teeth alignment के बारे में inquiry की थी, सही है ना?
+user:  अजया वाट वाट वाट वाट वाट
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user:  वे जो
+user:  वटवड़
+assistant: आपकी दाँतों के साथ क्या समस्या है, कृपया बताएं?
+user:  झाल
+assistant: मैं आपकी बात समझ गई। Nearby options के लिए pincode या city बताएं।
+user:  वटेवाद लुटेवाद
+user:  वटेवार वटेवार वटेवार
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी,
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: अगरेटी थे
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: झाल
+assistant: आपकी टेढ़े दाँत की problem समझ गई। Nearby options के लिए, pincode या city बताएं?
+assistant: मैं Toothsi की तरफ स े Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: ताकिती
+assistant: Perfect! आपकी main dental c oncern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: कर दो दो
+assistant: क्या आप अपनी dental c oncern को फिर से बता सकते हैं? मुझे आपके दाँतों के बारे में और जानकारी चाहिए।
+user: कर दो
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: यादे इसको रहते जो
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: अलो
+assistant: आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: के रे दाद
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपकी main dental concern क्या
+assistant: है? टेढ़े दाँत, gaps, या कुछ और?
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: है
+user: ा rehell
+user: वेलो
+user: वो लो तो साइब
+user: हलो
+assistant: नमस्ते! मैं Toothsi की तरफ से Neha बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+assistant: मैं Toothsi की तरफ से Neha बोल रही हूँ। Ananya जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: अँछ
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: हलो
+assistant: नमस्ते!  मैं Toothsi की तरफ से Neha बोल रही हूँ।  Ananya जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: आपके आवाज नहीं आपके आवाज नहीं हारी है
+user: अब बुलिया
+assistant: मैं Toothsi की तरफ से Neha बोल रही हूँ।  Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: पार किया था
+assistant: Perfect!  आपकी main dental concern क्या है?  टेढ़े दाँत, gaps, या कुछ और?
+user: गाप की समस्ष्य है
+assistant: मैं आपकी gaps की समस्या समझ गई।   Nearby options के लिए, क्या आप मुझे अपना पincode या city बता सकते हैं?
+user: आइ तो जडे पून
+assistant: Confirm कर लूं - आपने "जडे पून" बोला, सही है ना?
+user: नहीं, 5300, 4300
+assistant: Confirm कर लूं - आपने
+user: अजय को
+assistant: Confirm कर लूं - आपने "अजय को" बोला, सही है ना?
+user: hello hello
+assistant: नमस्ते! मैं Toothsi की तरफ से Neha बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: आप किया ता
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: दूसरा ही दान्त बरवना है
+assistant: मैंने आपकी दाँतों की समस्या समझ ली।  Nearby options के लिए, क्या आप मुझे अपना पincode या city बता सकते हैं?
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: आगारेख शीचिटी
+assistant: आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+assistant: मैं Toothsi की तरफ से Neha बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: Hello.
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: हां हां correct.
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: हां हां correct.
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: Model
+user: UR
+assistant: आपकी टेढ़े दाँत की problem समझ गई। Nearby options के लिए pincode या city बताएं?
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। Ankit जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: हां correct.
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: तेरह हज़ार.
+assistant: माफ़ कीजिए, मैं समझी नहीं। क्या आप कृपया अपनी main dental concern बता सकते हैं - जैसे टेढ़े-मेढ़े दांत, दांतों में गैप, या कुछ और?
+assistant: I'm Neha from Toothsi. Did you inquire about makeO Toothsi aligners?
+user: Yeah, that's correct.
+assistant: Perfect! What's your main conc ern with your teeth — crooked teeth, gaps, or something else?
+user: It's a gooded
+user: tea.
+assistant: I understand your con cern about crooked teeth. To check for nearby c linics, could you please tell me your pincode or city?
+user: 1 double 2 double 0 1.
+assistant: Let me confirm - you said one two two zero zero one, is that correct?
+user: Are you there?
+assistant: Yes, I'm here. Let me confirm - you said one two two zero zero one, is that correct?
+user: Yeah, that's correct.
+assistant: **Hinglish:** Great! In your area, w e have clinics at Sec 14, Gurugram and Green Park. We also offer a hom e scan. Which option works better for you?
+user: Form scan.
+assistant: Great choice! I'm now transferring your call to our booking agent.
+user: Ok.
+assistant: Great choice! I'm now transferring your call to our booking agent.
+user: Ok.
+assistant: Great choice! I'm now transferring your call to our booking agent.
+user: Ok ok.
+assistant: Great choice! I'm now transferring your call to our booking agent.
+user: End the call.
+assistant: Thanks for calling, goodbye!
+assistant: मैं Toothsi की तरफ से Ananya बोल रही हूँ। there जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?
+user: हां, correct हुई थी.
+assistant: Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?
+user: तेरह दास.
+assistant: Thank you for sharing. आपकी तेढ़े दाँत की problem समझ गई। Nearby options के लिए pincode या city बताएं?

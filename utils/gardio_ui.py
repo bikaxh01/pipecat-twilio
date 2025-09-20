@@ -9,37 +9,51 @@ def create_prompt_ui():
     <title>Prompt Editor</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a1a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
             margin: 0;
-            padding: 20px;
-            color: #e0e0e0;
+            padding: 24px;
+            color: #ffffff;
+            min-height: 100vh;
         }
         
         .main-container {
-            display: flex;
-            gap: 20px;
-            max-width: 1400px;
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            gap: 24px;
+            max-width: 1800px;
             margin: 0 auto;
+            min-height: calc(100vh - 48px);
         }
         
         .left-panel {
-            flex: 0 0 350px;
-            background: #2d2d2d;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            padding: 20px;
-            border: 1px solid #404040;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: fit-content;
+        }
+        
+        .middle-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             height: fit-content;
         }
         
         .right-panel {
-            flex: 1;
-            background: #2d2d2d;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            padding: 30px;
-            border: 1px solid #404040;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: fit-content;
         }
         
         .container {
@@ -54,49 +68,65 @@ def create_prompt_ui():
         
         h1 {
             color: #ffffff;
-            margin-bottom: 20px;
-            font-size: 28px;
+            margin-bottom: 32px;
+            font-size: 32px;
             text-align: center;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         h2 {
             color: #ffffff;
-            margin-bottom: 15px;
-            font-size: 20px;
-            border-bottom: 1px solid #404040;
-            padding-bottom: 10px;
-            font-weight: 500;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+        
+        h3 {
+            color: #ffffff;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
         }
         
         .tabs {
             display: flex;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #404040;
+            margin-bottom: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .tab {
-            padding: 12px 24px;
+            flex: 1;
+            padding: 12px 20px;
             cursor: pointer;
             border: none;
             background: none;
-            color: #b0b0b0;
-            font-size: 16px;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            border-radius: 4px 4px 0 0;
+            color: #a0a0a0;
+            font-size: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 8px;
             font-weight: 500;
+            letter-spacing: -0.1px;
         }
         
         .tab.active {
-            color: #4a9eff;
-            border-bottom-color: #4a9eff;
-            background: rgba(74, 158, 255, 0.1);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
-        .tab:hover {
+        .tab:hover:not(.active) {
             color: #ffffff;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.08);
         }
         
         .tab-content {
@@ -108,108 +138,125 @@ def create_prompt_ui():
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         
         label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
-            color: #b0b0b0;
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 14px;
+            letter-spacing: -0.1px;
         }
         
         textarea {
             width: 100%;
             height: 300px;
-            padding: 12px;
-            border: 1px solid #555;
-            border-radius: 4px;
-            font-family: 'Monaco', 'Menlo', monospace;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
             resize: vertical;
-            background: #1e1e1e;
-            color: #e0e0e0;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
         }
         
         textarea:focus {
             outline: none;
-            border-color: #4a9eff;
-            box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+            border-color: rgba(74, 158, 255, 0.5);
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
         }
         
         .buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
         
         button {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 4px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 14px;
-            transition: background-color 0.2s;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: -0.1px;
         }
         
         .btn-primary {
-            background: #4a9eff;
+            background: linear-gradient(135deg, #4a9eff 0%, #357abd 100%);
             color: white;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
         }
         
         .btn-primary:hover {
-            background: #357abd;
+            background: linear-gradient(135deg, #357abd 0%, #2c5aa0 100%);
+            box-shadow: 0 6px 16px rgba(74, 158, 255, 0.4);
+            transform: translateY(-1px);
         }
         
         .btn-secondary {
-            background: #555;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .btn-secondary:hover {
-            background: #666;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
         }
         
         .status {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 4px;
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 12px;
             display: none;
+            font-weight: 500;
         }
         
         .status.success {
-            background: #1e4d2b;
+            background: rgba(34, 197, 94, 0.1);
             color: #4ade80;
-            border: 1px solid #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
         }
         
         .status.error {
-            background: #4d1e1e;
+            background: rgba(239, 68, 68, 0.1);
             color: #f87171;
-            border: 1px solid #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
         
         .bot-info {
-            background: #1e1e1e;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
             font-size: 14px;
-            color: #b0b0b0;
+            color: #a0a0a0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 1.5;
         }
         
         .call-ui {
-            margin-bottom: 20px;
-            padding: 20px;
-            background: #1e1e1e;
-            border-radius: 8px;
-            border: 1px solid #404040;
+            margin-bottom: 24px;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .call-ui h2 {
             color: #ffffff;
-            margin-bottom: 15px;
-            font-size: 18px;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 600;
         }
         
         .call-ui .form-group {
@@ -219,68 +266,171 @@ def create_prompt_ui():
         .call-ui label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
-            color: #b0b0b0;
+            font-weight: 600;
+            color: #ffffff;
             font-size: 14px;
         }
         
-        .call-ui input, .call-ui select {
+        .call-ui input {
             width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #555;
-            border-radius: 6px;
-            background: #1e1e1e;
-            color: #e0e0e0;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
             font-size: 14px;
             box-sizing: border-box;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .call-ui input:focus, .call-ui select:focus {
+        .call-ui input:focus {
             outline: none;
-            border-color: #4a9eff;
-            box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+            border-color: rgba(74, 158, 255, 0.5);
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        /* Clean modern dropdown styling */
+        .call-ui select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 100%;
+            padding: 14px 16px;
+            padding-right: 44px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            box-sizing: border-box;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+            cursor: pointer;
+        }
+        
+        .call-ui select:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+        }
+        
+        .call-ui select:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+        }
+        
+        /* Modern dropdown option styling */
+        .call-ui select option {
+            background: #1e1e1e !important;
+            color: #ffffff !important;
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            border: none !important;
+            margin: 0 !important;
+        }
+        
+        .call-ui select option:checked,
+        .call-ui select option:selected {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            color: #ffffff !important;
+            font-weight: 500 !important;
+        }
+        
+        .call-ui select option:hover {
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%) !important;
+            color: #ffffff !important;
+        }
+        
+        /* General select styling for consistency */
+        select {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        /* Modern option styling */
+        select option {
+            background: #1e1e1e !important;
+            color: #ffffff !important;
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            border: none !important;
+        }
+        
+        select option:checked,
+        select option:selected {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            color: #ffffff !important;
+            font-weight: 500 !important;
+        }
+        
+        select option:hover {
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%) !important;
+            color: #ffffff !important;
+        }
+        
+        .provider-dropdowns {
+            display: none;
+        }
+        
+        .provider-dropdowns.show {
+            display: block;
         }
         
         .call-ui .btn-call {
             width: 100%;
-            padding: 14px 20px;
-            background: #22c55e;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 16px;
-            font-weight: 600;
-            transition: all 0.2s;
+            font-weight: 700;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-        
-        .call-ui .btn-call:hover {
-            background: #16a34a;
-            transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
         }
         
+        .call-ui .btn-call:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+        }
+        
         .call-ui .btn-call:disabled {
-            background: #555;
+            background: rgba(255, 255, 255, 0.1);
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         .call-results {
-            margin-top: 20px;
-            padding: 20px;
-            background: #1e1e1e;
-            border-radius: 8px;
-            border: 1px solid #404040;
+            margin-top: 24px;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .call-results h3 {
             color: #ffffff;
-            margin-bottom: 15px;
-            font-size: 16px;
-            font-weight: 500;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
         }
         
         .call-item {
@@ -454,20 +604,225 @@ def create_prompt_ui():
             to { transform: rotate(360deg); }
         }
         
-        @media (max-width: 768px) {
+        /* Dialog Styles */
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dialog-content {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 900px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .dialog-header h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        
+        .dialog-close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #a0a0a0;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dialog-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+        
+        .dialog-body {
+            padding: 24px;
+        }
+        
+        .call-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .call-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(74, 158, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .call-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .call-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .call-card-phone {
+            font-size: 16px;
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+        
+        .call-card-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 70px;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .call-card-status.completed {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(34, 197, 94, 0.15));
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+        }
+        
+        .call-card-status.in-progress {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0.15));
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+        }
+        
+        .call-card-status.ringing {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.15));
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+        }
+        
+        .call-card-status.failed {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.15));
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+        }
+        
+        .call-card-status.busy {
+            background: linear-gradient(135deg, rgba(107, 114, 128, 0.25), rgba(107, 114, 128, 0.15));
+            color: #6b7280;
+            border: 1px solid rgba(107, 114, 128, 0.4);
+            box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2);
+        }
+        
+        .call-card-status.no-answer {
+            background: linear-gradient(135deg, rgba(156, 163, 175, 0.25), rgba(156, 163, 175, 0.15));
+            color: #9ca3af;
+            border: 1px solid rgba(156, 163, 175, 0.4);
+            box-shadow: 0 2px 8px rgba(156, 163, 175, 0.2);
+        }
+        
+        .call-card-status:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .call-card-sid {
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+            font-size: 11px;
+            color: #a0a0a0;
+            background: rgba(74, 158, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(74, 158, 255, 0.2);
+        }
+        
+        @media (max-width: 1200px) {
             .main-container {
-                flex-direction: column;
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
             }
             
-            .left-panel {
-                flex: none;
-                margin-bottom: 20px;
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .dialog-content {
+                width: 95%;
+                margin: 16px;
+                border-radius: 16px;
+            }
+            
+            .call-ui .btn-call {
+                font-size: 14px;
+                padding: 14px 20px;
+            }
+            
+            .tabs {
+                margin-bottom: 24px;
+            }
+            
+            .tab {
+                padding: 10px 16px;
+                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
     <div class="main-container">
+        <!-- Left Panel: Call Configuration -->
         <div class="left-panel">
             <div class="call-ui">
                 <h2>Make a Call</h2>
@@ -496,8 +851,49 @@ def create_prompt_ui():
                         <label for="botType">Bot Type (Controls Both Call & Prompt):</label>
                         <select id="botType">
                             <option value="multimodel">Multimodel Bot</option>
-                            <option value="standard">Standard Bot</option>
+                            <option value="standard" selected>Standard Bot</option>
                         </select>
+                    </div>
+                    
+                    <div class="provider-dropdowns" id="providerDropdowns">
+                        <div class="form-group">
+                            <label for="ttsProvider">TTS Provider:</label>
+                            <select id="ttsProvider">
+                                <option value="sarvam_ai" selected>Sarvam AI</option>
+                                <option value="cartesia">Cartesia</option>
+                                <option value="elevenlabs">ElevenLabs</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sttProvider">STT Provider:</label>
+                            <select id="sttProvider">
+                                <option value="deepgram" selected>Deepgram</option>
+                                <option value="gladia">Gladia</option>
+                                <option value="soniox">SonioX</option>
+                                <option value="cartesia">Cartesia</option>
+                                <option value="groq">Groq</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="llmProvider">LLM Provider:</label>
+                            <select id="llmProvider">
+                                <option value="openai/gpt-4o-mini-2024-07-18" selected>OpenAI GPT-4o Mini (2024-07-18)</option>
+                                <option value="gemini/gemini-2.5-pro">Gemini 2.5 Pro</option>
+                                <option value="gemini/gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                <option value="gemini/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
+                                <option value="gemini/gemini-2.0-flash">Gemini 2.0 Flash</option>
+                                <option value="gemini/gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+                                <option value="openai/gpt-5-2025-08-07">OpenAI GPT-5 (2025-08-07)</option>
+                                <option value="openai/gpt-5-mini-2025-08-07">OpenAI GPT-5 Mini (2025-08-07)</option>
+                                <option value="openai/gpt-5-nano-2025-08-07">OpenAI GPT-5 Nano (2025-08-07)</option>
+                                <option value="openai/gpt-4.1-2025-04-14">OpenAI GPT-4.1 (2025-04-14)</option>
+                                <option value="openai/gpt-4.1-nano-2025-04-14">OpenAI GPT-4.1 Nano (2025-04-14)</option>
+                                <option value="openai/o4-mini-2025-04-16">OpenAI O4 Mini (2025-04-16)</option>
+                                <option value="openai/gpt-4.1-mini-2025-04-14">OpenAI GPT-4.1 Mini (2025-04-14)</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <button type="submit" class="btn-call" id="callBtn">
@@ -505,76 +901,93 @@ def create_prompt_ui():
                     </button>
                 </form>
             </div>
-            
-            <div class="call-results">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3>Current Call</h3>
-                    <button id="clearCallBtn" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; display: none;">
-                        Clear Call
-                    </button>
-                </div>
-                <div id="callResultsList">
-                    <div style="text-align: center; color: #b0b0b0; padding: 20px;">
-                        No active call
-                    </div>
-                </div>
-            </div>
         </div>
         
-        <div class="right-panel">
-        <h1>Prompt Editor</h1>
-            <div style="text-align: center; margin-bottom: 20px; color: #b0b0b0; font-size: 14px;">
+        <!-- Middle Panel: Prompt Editor -->
+        <div class="middle-panel">
+            <h1>Prompt Editor</h1>
+            <div style="text-align: center; margin-bottom: 20px; color: #a0a0a0; font-size: 14px;">
                 Bot type is controlled by the dropdown in the call section
             </div>
             
             <div class="tabs">
-                <button class="tab active" data-tab="multimodel">Multimodel Bot</button>
-                <button class="tab" data-tab="standard">Standard Bot</button>
+                <button class="tab" data-tab="multimodel">Multimodel Bot</button>
+                <button class="tab active" data-tab="standard">Standard Bot</button>
             </div>
         
-        <div id="multimodel-tab" class="tab-content active">
-            <div class="bot-info">
-                <strong>Multimodel Bot:</strong> Advanced bot with multiple AI models for enhanced conversation capabilities.
-            </div>
-            <form id="multimodelForm">
-            <div class="form-group">
-                    <label for="multimodelPromptText">Raw Prompt:</label>
-                <textarea 
-                        id="multimodelPromptText" 
-                    placeholder="Enter your prompt here..."
-                    required
-                ></textarea>
-            </div>
-            
-            <div class="buttons">
-                    <button type="submit" class="btn-primary" id="multimodelSaveBtn">Save Prompt</button>
-                    <button type="button" class="btn-secondary" id="multimodelResetBtn">Reset</button>
+            <div id="multimodel-tab" class="tab-content">
+                <div class="bot-info">
+                    <strong>Multimodel Bot:</strong> Advanced bot with multiple AI models for enhanced conversation capabilities.
                 </div>
-            </form>
-        </div>
-        
-        <div id="standard-tab" class="tab-content">
-            <div class="bot-info">
-                <strong>Standard Bot:</strong> Standard bot with single AI model for basic conversation capabilities.
-            </div>
-            <form id="standardForm">
+                <form id="multimodelForm">
                 <div class="form-group">
-                    <label for="standardPromptText">Raw Prompt:</label>
+                        <label for="multimodelPromptText">Raw Prompt:</label>
                     <textarea 
-                        id="standardPromptText" 
+                            id="multimodelPromptText" 
                         placeholder="Enter your prompt here..."
                         required
                     ></textarea>
                 </div>
                 
                 <div class="buttons">
-                    <button type="submit" class="btn-primary" id="standardSaveBtn">Save Prompt</button>
-                    <button type="button" class="btn-secondary" id="standardResetBtn">Reset</button>
+                        <button type="submit" class="btn-primary" id="multimodelSaveBtn">Save Prompt</button>
+                        <button type="button" class="btn-secondary" id="multimodelResetBtn">Reset</button>
+                    </div>
+                </form>
             </div>
-        </form>
+            
+            <div id="standard-tab" class="tab-content active">
+                <div class="bot-info">
+                    <strong>Standard Bot:</strong> Standard bot with single AI model for basic conversation capabilities.
+                </div>
+                <form id="standardForm">
+                    <div class="form-group">
+                        <label for="standardPromptText">Raw Prompt:</label>
+                        <textarea 
+                            id="standardPromptText" 
+                            placeholder="Enter your prompt here..."
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="buttons">
+                        <button type="submit" class="btn-primary" id="standardSaveBtn">Save Prompt</button>
+                        <button type="button" class="btn-secondary" id="standardResetBtn">Reset</button>
+                </div>
+            </form>
+            </div>
+            
+            <div class="status" id="statusMessage"></div>
         </div>
         
-        <div class="status" id="statusMessage"></div>
+        <!-- Right Panel: Call List -->
+        <div class="right-panel">
+            <div class="call-results">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Latest Calls</h3>
+                    <button id="refreshCallsBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 12px;">
+                        Refresh
+                    </button>
+                </div>
+                <div id="callResultsList">
+                    <div style="text-align: center; color: #a0a0a0; padding: 20px;">
+                        Loading calls...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call Details Dialog -->
+    <div id="callDetailsDialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h2>Call Details</h2>
+                <button id="closeDialogBtn" class="dialog-close-btn">&times;</button>
+            </div>
+            <div class="dialog-body" id="dialogBody">
+                <!-- Call details will be populated here -->
+            </div>
         </div>
     </div>
 
@@ -584,7 +997,7 @@ def create_prompt_ui():
             standard: ''
         };
         
-        let currentTab = 'multimodel';
+        let currentTab = 'standard';
         
         // Tab switching functionality
         document.querySelectorAll('.tab').forEach(tab => {
@@ -610,11 +1023,30 @@ def create_prompt_ui():
             if (botTypeSelect) {
                 botTypeSelect.value = tabName;
             }
+            
+            // Show/hide provider dropdowns based on bot type
+            const providerDropdowns = document.getElementById('providerDropdowns');
+            if (providerDropdowns) {
+                if (tabName === 'standard') {
+                    providerDropdowns.classList.add('show');
+                } else {
+                    providerDropdowns.classList.remove('show');
+                }
+            }
         }
         
         // Bot type dropdown change handler
         function onBotTypeChange() {
             const botType = document.getElementById('botType').value;
+            const providerDropdowns = document.getElementById('providerDropdowns');
+            
+            // Show/hide provider dropdowns based on bot type
+            if (botType === 'standard') {
+                providerDropdowns.classList.add('show');
+            } else {
+                providerDropdowns.classList.remove('show');
+            }
+            
             switchTab(botType);
         }
         
@@ -708,22 +1140,40 @@ def create_prompt_ui():
             showMessage('Reset to original', 'success');
         }
         
-        // Call results management
+        // Latest calls management
+        let latestCalls = [];
         let currentCall = null;
         let pollingInterval = null;
         let callCompletedTime = null;
         
+        async function loadLatestCalls() {
+            try {
+                const response = await fetch('/api/latest-calls');
+                if (response.ok) {
+                    const data = await response.json();
+                    latestCalls = data.calls || [];
+                    updateCallResultsDisplay();
+                } else {
+                    console.error('Failed to load latest calls');
+                    updateCallResultsDisplay();
+                }
+            } catch (error) {
+                console.error('Error loading latest calls:', error);
+                updateCallResultsDisplay();
+            }
+        }
+        
         function setCurrentCall(callData) {
             currentCall = callData;
-            updateCallResultsDisplay();
-            // Show clear button when there's a call
-            document.getElementById('clearCallBtn').style.display = 'inline-block';
+            // Refresh latest calls when a new call is made
+            loadLatestCalls();
         }
         
         function updateCurrentCall(updatedData) {
             if (currentCall) {
                 currentCall = { ...currentCall, ...updatedData };
-                updateCallResultsDisplay();
+                // Refresh latest calls when current call is updated
+                loadLatestCalls();
             }
         }
         
@@ -734,80 +1184,40 @@ def create_prompt_ui():
                 clearInterval(pollingInterval);
                 pollingInterval = null;
             }
-            updateCallResultsDisplay();
-            // Hide clear button when no call
-            document.getElementById('clearCallBtn').style.display = 'none';
+            // Refresh latest calls
+            loadLatestCalls();
         }
         
         function updateCallResultsDisplay() {
             const container = document.getElementById('callResultsList');
             
-            if (!currentCall) {
-                container.innerHTML = '<div style="text-align: center; color: #b0b0b0; padding: 20px;">No active call</div>';
+            if (latestCalls.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #b0b0b0; padding: 20px;">No calls found</div>';
                 return;
             }
             
-            container.innerHTML = `
-                <div class="call-item">
-                    <div class="call-header">
-                        <span class="call-sid">${currentCall.call_sid}</span>
-                        <span class="call-status ${currentCall.status}">
-                            ${currentCall.status === 'completed' ? 
-                              (callCompletedTime && (Date.now() - callCompletedTime) < 60000 ? 
-                                '✅ Completed (Generating Recording...)' : '✅ Completed') : 
-                              currentCall.status === 'in-progress' ? '🔄 In Progress' : 
-                              currentCall.status === 'ringing' ? '📞 Ringing' : currentCall.status}
+            let html = '';
+            latestCalls.forEach(call => {
+                html += `
+                    <div class="call-card" onclick="openCallDetails('${call.call_sid}')">
+                        <div class="call-card-header">
+                            <div class="call-card-phone">${call.phone_number}</div>
+                            <span class="call-card-status ${call.status}">
+                                ${call.status === 'completed' ? '✓ COMPLETED' : 
+                                  call.status === 'in-progress' ? '⟳ IN PROGRESS' : 
+                                  call.status === 'ringing' ? '📞 RINGING' : 
+                                  call.status === 'failed' ? '✗ FAILED' : 
+                                  call.status === 'busy' ? '📵 BUSY' : 
+                                  call.status === 'no-answer' ? '📵 NO ANSWER' : 
+                                  call.status.toUpperCase()}
                         </span>
                     </div>
-                    
-                    <div class="call-details">
-                        <div class="call-detail">
-                            <div class="call-detail-label">Phone</div>
-                            <div class="call-detail-value">${currentCall.phone_number}</div>
-                        </div>
-                        <div class="call-detail">
-                            <div class="call-detail-label">Name</div>
-                            <div class="call-detail-value">${currentCall.name || 'N/A'}</div>
-                        </div>
-                        <div class="call-detail">
-                            <div class="call-detail-label">Bot Type</div>
-                            <div class="call-detail-value">${currentCall.multimodel ? 'Multimodel' : 'Standard'}</div>
-                        </div>
-                        <div class="call-detail">
-                            <div class="call-detail-label">Duration</div>
-                            <div class="call-detail-value">${currentCall.call_duration ? currentCall.call_duration + 's' : 'N/A'}</div>
-                        </div>
-                        <div class="call-detail">
-                            <div class="call-detail-label">Cost</div>
-                            <div class="call-detail-value">${currentCall.call_cost ? '$' + currentCall.call_cost.toFixed(4) : 'N/A'}</div>
-                        </div>
-                        <div class="call-detail">
-                            <div class="call-detail-label">Created</div>
-                            <div class="call-detail-value">${currentCall.created_at ? new Date(currentCall.created_at).toLocaleString() : 'N/A'}</div>
-                        </div>
-                    </div>
-                    
-                    ${currentCall.transcript ? `
-                        <div class="call-transcript">
-                            <div class="transcript-header">
-                                <strong>Transcript:</strong>
-                                <button class="copy-transcript-btn" onclick="copyTranscript()">Copy</button>
-                            </div>
-                            <textarea readonly id="transcriptTextarea">${currentCall.transcript}</textarea>
-                        </div>
-                    ` : ''}
-                    
-                    ${currentCall.recording_url ? `
-                        <div class="call-audio">
-                            <audio controls class="audio-player">
-                                <source src="${currentCall.recording_url}" type="audio/wav">
-                                Your browser does not support the audio element.
-                            </audio>
-                            <a href="${currentCall.recording_url}" download class="download-btn">Download</a>
-                        </div>
-                    ` : ''}
+                        <div class="call-card-sid">${call.call_sid}</div>
                 </div>
             `;
+            });
+            
+            container.innerHTML = html;
         }
         
         async function pollCallStatus(callSid) {
@@ -877,14 +1287,21 @@ def create_prompt_ui():
                     showMessage(`Call initiated successfully! Call SID: ${result.call_sid}`, 'success');
                     
                     // Set current call and start polling
-                    setCurrentCall({
+                    const callInfo = {
                         call_sid: result.call_sid,
                         phone_number: callData.phone_number,
                         name: callData.name,
                         multimodel: callData.multimodel,
                         status: 'ringing',
                         created_at: new Date().toISOString()
-                    });
+                    };
+                    
+                    // Only include provider data if available (for standard bot)
+                    if (callData.tts_provider) callInfo.tts_provider = callData.tts_provider;
+                    if (callData.stt_provider) callInfo.stt_provider = callData.stt_provider;
+                    if (callData.llm_provider) callInfo.llm_provider = callData.llm_provider;
+                    
+                    setCurrentCall(callInfo);
                     
                     startPolling(result.call_sid);
                     
@@ -925,13 +1342,131 @@ def create_prompt_ui():
                 multimodel: botType === 'multimodel'
             };
             
+            // Only include provider data for standard bot
+            if (botType === 'standard') {
+                const ttsProvider = document.getElementById('ttsProvider').value;
+                const sttProvider = document.getElementById('sttProvider').value;
+                const llmProvider = document.getElementById('llmProvider').value;
+                
+                callData.tts_provider = ttsProvider;
+                callData.stt_provider = sttProvider;
+                callData.llm_provider = llmProvider;
+            }
+            
             await makeCall(callData);
         });
         
-        // Clear call button event listener
-        document.getElementById('clearCallBtn').addEventListener('click', () => {
-            clearCurrentCall();
-            showMessage('Call cleared', 'success');
+        // Refresh calls button event listener
+        document.getElementById('refreshCallsBtn').addEventListener('click', () => {
+            loadLatestCalls();
+            showMessage('Calls refreshed', 'success');
+        });
+        
+        // Dialog functionality
+        async function openCallDetails(callSid) {
+            try {
+                const response = await fetch(`/api/call-details/${callSid}`);
+                if (response.ok) {
+                    const callData = await response.json();
+                    showCallDetailsDialog(callData);
+                } else {
+                    showMessage('Failed to load call details', 'error');
+                }
+            } catch (error) {
+                showMessage('Error loading call details', 'error');
+            }
+        }
+        
+        function showCallDetailsDialog(callData) {
+            const dialog = document.getElementById('callDetailsDialog');
+            const dialogBody = document.getElementById('dialogBody');
+            
+            dialogBody.innerHTML = `
+                <div class="call-item">
+                    <div class="call-header">
+                        <span class="call-sid">${callData.call_sid}</span>
+                        <span class="call-status ${callData.status}">
+                            ${callData.status === 'completed' ? '✅ Completed' : 
+                              callData.status === 'in-progress' ? '🔄 In Progress' : 
+                              callData.status === 'ringing' ? '📞 Ringing' : callData.status}
+                        </span>
+                    </div>
+                    
+                    <div class="call-details">
+                        <div class="call-detail">
+                            <div class="call-detail-label">Phone</div>
+                            <div class="call-detail-value">${callData.phone_number}</div>
+                        </div>
+                        <div class="call-detail">
+                            <div class="call-detail-label">Name</div>
+                            <div class="call-detail-value">${callData.name || 'N/A'}</div>
+                        </div>
+                        <div class="call-detail">
+                            <div class="call-detail-label">Bot Type</div>
+                            <div class="call-detail-value">${callData.multimodel ? 'Multimodel' : 'Standard'}</div>
+                        </div>
+                        <div class="call-detail">
+                            <div class="call-detail-label">TTS Provider</div>
+                            <div class="call-detail-value">${callData.tts_provider || 'N/A'}</div>
+                        </div>
+                        <div class="call-detail">
+                            <div class="call-detail-label">STT Provider</div>
+                            <div class="call-detail-value">${callData.stt_provider || 'N/A'}</div>
+                        </div>
+                        <div class="call-detail">
+                            <div class="call-detail-label">LLM Provider</div>
+                            <div class="call-detail-value">${callData.llm_provider || 'N/A'}</div>
+                        </div>
+                        <div class="call-detail">
+                            <div class="call-detail-label">Duration</div>
+                            <div class="call-detail-value">${callData.call_duration ? callData.call_duration + 's' : 'N/A'}</div>
+                        </div>
+                        <div class="call-detail">
+                            <div class="call-detail-label">Cost</div>
+                            <div class="call-detail-value">${callData.call_cost ? '$' + callData.call_cost.toFixed(4) : 'N/A'}</div>
+                        </div>
+                        <div class="call-detail">
+                            <div class="call-detail-label">Created</div>
+                            <div class="call-detail-value">${callData.created_at ? new Date(callData.created_at).toLocaleString() : 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    ${callData.transcript ? `
+                        <div class="call-transcript">
+                            <div class="transcript-header">
+                                <strong>Transcript:</strong>
+                                <button class="copy-transcript-btn" onclick="copyTranscript()">Copy</button>
+                            </div>
+                            <textarea readonly id="transcriptTextarea">${callData.transcript}</textarea>
+                        </div>
+                    ` : ''}
+                    
+                    ${callData.recording_url ? `
+                        <div class="call-audio">
+                            <audio controls class="audio-player">
+                                <source src="${callData.recording_url}" type="audio/wav">
+                                Your browser does not support the audio element.
+                            </audio>
+                            <a href="${callData.recording_url}" download class="download-btn">Download</a>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            dialog.style.display = 'flex';
+        }
+        
+        function closeCallDetailsDialog() {
+            const dialog = document.getElementById('callDetailsDialog');
+            dialog.style.display = 'none';
+        }
+        
+        // Dialog event listeners
+        document.getElementById('closeDialogBtn').addEventListener('click', closeCallDetailsDialog);
+        document.getElementById('callDetailsDialog').addEventListener('click', (e) => {
+            if (e.target.id === 'callDetailsDialog') {
+                closeCallDetailsDialog();
+            }
         });
         
         // Force stop polling function for testing
@@ -984,8 +1519,20 @@ def create_prompt_ui():
         
         // Load prompts on page load
         document.addEventListener('DOMContentLoaded', () => {
-            loadCurrentPrompt('multimodel');
             loadCurrentPrompt('standard');
+            loadCurrentPrompt('multimodel');
+            
+            // Initialize provider dropdown visibility based on current bot type
+            const botType = document.getElementById('botType').value;
+            const providerDropdowns = document.getElementById('providerDropdowns');
+            if (botType === 'standard') {
+                providerDropdowns.classList.add('show');
+            } else {
+                providerDropdowns.classList.remove('show');
+            }
+            
+            // Load latest calls on page load
+            loadLatestCalls();
         });
     </script>
 </body>
