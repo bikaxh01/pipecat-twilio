@@ -1,4 +1,4 @@
-pipecat-ai[websocket,silero,deepgram,runner,webrtc,google,openai,aws,azure,cartesia,openrouter,gladia,fal,groq,soniox,elevenlabs]
+pipecat-ai[websocket,silero,deepgram,runner,webrtc,google,sarvam,openai,aws,azure,cartesia,openrouter,gladia,fal,groq,soniox,elevenlabs]
 twilio
 motor
 beanie

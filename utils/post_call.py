@@ -79,6 +79,8 @@ async def process_call_completion_background(
         else:
             logger.warning(f"No recording files found for call {call_sid}")
         
+        # Note: Metrics data is now handled by the metrics field in the Call model
+        # The metrics data is already saved in bot_2.py when the call disconnects
         # Save all updates to database
         await call.save()
         logger.info(f"✅ Background processing completed for call {call_sid}")
@@ -122,6 +124,7 @@ async def call_completion_webhook(call_sid: str, status: str):
             "recording_url": call.recording_url or "",
             "call_cost": call.call_cost or 0.0,
             "call_duration": call.call_duration or 0,  # Call duration in seconds
+            "metrics": call.metrics.model_dump() if call.metrics else None,  # Include metrics data
             "created_at": call.created_at.isoformat() if call.created_at else None,
             "updated_at": call.updated_at.isoformat() if call.updated_at else None
         }

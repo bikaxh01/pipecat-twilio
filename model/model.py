@@ -143,6 +143,23 @@ class PincodeData(Document):
     clinic_2: Optional[str] = None
     city: str
 
+class MetricsData(BaseModel):
+    total_latency_ms: Optional[float] = None  # Total latency in milliseconds
+    tts_ttfb_ms: Optional[float] = None  # TTS Time to First Byte in milliseconds
+    stt_ttfb_ms: Optional[float] = None  # STT Time to First Byte in milliseconds
+    llm_ttfb_ms: Optional[float] = None  # LLM Time to First Byte in milliseconds
+    total_prompt_tokens: Optional[int] = None  # Total prompt tokens used
+    total_completion_tokens: Optional[int] = None  # Total completion tokens used
+    total_tts_characters: Optional[int] = None  # Total TTS characters processed
+    total_sst_duration_ms: Optional[float] = None  # Total STT duration in milliseconds
+
+
+class CostData(BaseModel):
+    llm_cost: Optional[float] = None
+    tts_cost: Optional[float] = None
+    stt_cost: Optional[float] = None
+    total_cost: Optional[float] = None
+
 
 class Call(Document):
     call_sid: str
@@ -153,7 +170,9 @@ class Call(Document):
     recording_url: Optional[str] = None
     stt_provider: Optional[STTProvider] = None
     tts_provider: Optional[TTSProvider] = None
+    metrics: Optional[MetricsData] = None  # Total latency in milliseconds
     llm_provider: Optional[str] = None  # LLM provider (gemini or openai)
+    cost: Optional[CostData] = None
     call_cost: Optional[float] = None
     call_duration: Optional[int] = None  # Call duration in seconds
     transcript: Optional[str] = None

@@ -3,28 +3,25 @@ import asyncio
 from dotenv import load_dotenv
 from loguru import logger
 import aiohttp
-from pipecat.services.sarvam.tts import SarvamTTSService
-from pipecat.services.deepgram.tts import DeepgramTTSService
-from pipecat.services.deepgram.stt import DeepgramSTTService
-from pipecat.services.google.llm import GoogleLLMService
+
 from pipecat.processors.frameworks.rtvi import RTVIProcessor, RTVIConfig
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask, PipelineParams
 from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
 from pipecat.processors.frameworks.rtvi import RTVIObserver
-from pipecat.transcriptions.language import Language
+
 from utils.tool_schema import (
     fs_get_nearby_clinics,
     fs_end_call,
     _handle_get_nearby_clinics,
     _handle_end_call,
 )
-from pipecat.services.openai.llm import OpenAILLMService
+
+
 from pipecat.processors.transcript_processor import TranscriptProcessor
 from utils.prompt import create_dynamic_prompt
-from pipecat.runner.types import RunnerArguments
-from deepgram import LiveOptions
+
 from pipecat.processors.audio.audio_buffer_processor import AudioBufferProcessor
 
 from pipecat.frames.frames import (
@@ -39,6 +36,8 @@ from pipecat.adapters.schemas.tools_schema import ToolsSchema
 from utils.call_audio import save_audio, finalize_audio_recording
 from utils.post_call import delayed_background_processing
 from model.model import Call, CallStatus
+from bots.standard.metric_collector import MetricsCollector
+
 
 load_dotenv(override=True)
 
@@ -80,6 +79,7 @@ async def run_bot_2(
                 fs_end_call,
             ]
         )
+        metric_collector = MetricsCollector()
 
         from utils.call_config import get_llm_service_config
 
@@ -119,7 +119,8 @@ async def run_bot_2(
             buffer_size=0,
             enable_turn_audio=False,
         )
-
+        from bots.standard.metric_collector import CostCollector
+        cost_collector = CostCollector()
         # Initialize transcript list for tracking
         transcript_list = []
 
@@ -176,13 +177,22 @@ async def run_bot_2(
                 audio_in_sample_rate=8000,  # Twilio's audio format
                 audio_out_sample_rate=8000,
                 allow_interruptions=True,
+                report_only_initial_ttfb=True,
                 enable_metrics=True,
                 enable_usage_metrics=True,
                 idle_timeout_secs=int(idle_timeout_secs),
                 cancel_on_idle_timeout=False,  # Don't auto-cancel
             ),
-            observers=[RTVIObserver(rtvi)],
+            observers=[RTVIObserver(rtvi), metric_collector],
         )
+
+        # Debug: Log that the metrics collector has been added
+        logger.info(f"🔧 MetricsCollector added to task observers")
+        logger.info(
+            f"🔧 Metrics enabled: enable_metrics={True}, enable_usage_metrics={True}"
+        )
+
+        task._initial_metrics_frame
 
         @transport.event_handler("on_client_connected")
         async def on_client_connected(transport, client):
@@ -222,8 +232,49 @@ async def run_bot_2(
         async def on_client_disconnected(transport, client):
 
             transcript_text = "\n".join(transcript_list)
+            bot_metrics = metric_collector.get_metric_summary()
 
             logger.info(f"Client disconnected ❌❌❌")
+
+            # Update call record with metrics data
+            try:
+                call = await Call.find_one({"call_sid": call_data["call_id"]})
+                if call:
+                    cost_collector.calculate_llm_cost(bot_metrics.get("tokens", {}).get("prompt_tokens", 0), bot_metrics.get("tokens", {}).get("completion_tokens", 0), llm_provider)
+                    logger.info(f"LLM cost: {cost_collector.llm_cost}")
+                    from model.model import MetricsData, CostData
+                    cost_data = CostData(
+                        llm_cost=cost_collector.llm_cost,
+                        tts_cost=cost_collector.tts_cost,
+                        stt_cost=cost_collector.stt_cost,
+                        total_cost=cost_collector.total_cost
+                    )
+                    
+                    # Create MetricsData object with collected metrics
+                    metrics_data = MetricsData(
+                        total_latency_ms=bot_metrics.get("total_latency", 0),
+                        tts_ttfb_ms=bot_metrics.get("tts_ttfb", 0),
+                        stt_ttfb_ms=bot_metrics.get("stt_ttfb", 0),
+                        llm_ttfb_ms=bot_metrics.get("llm_ttfb", 0),
+                        total_prompt_tokens=bot_metrics.get("tokens", {}).get("prompt_tokens", 0),
+                        total_completion_tokens=bot_metrics.get("tokens", {}).get("completion_tokens", 0),
+                        total_tts_characters=bot_metrics.get("tts_characters", 0),
+                        total_sst_duration_ms=bot_metrics.get("stt_total_duration", 0)
+                    )
+                    call.cost = cost_data
+                    call.metrics = metrics_data
+                    call.status = CallStatus.COMPLETED
+                    call.transcript = transcript_text
+                    await call.save()
+                    
+                    logger.info(f"✅ Updated call {call_data['call_id']} with metrics data")
+                    logger.info(f"📊 Metrics saved: total_latency={metrics_data.total_latency_ms}ms, "
+                               f"tokens={metrics_data.total_prompt_tokens + metrics_data.total_completion_tokens}, "
+                               f"tts_chars={metrics_data.total_tts_characters}")
+                else:
+                    logger.warning(f"Call record not found for {call_data['call_id']}")
+            except Exception as e:
+                logger.error(f"❌ Failed to update call with metrics: {e}")
 
             # Stop audio recording first to ensure file writing is complete
             try:
@@ -241,7 +292,10 @@ async def run_bot_2(
             try:
                 server_name = f"server_{call_data['call_id']}"
                 await finalize_audio_recording(
-                    call_data["call_id"], server_name, transcript_text, 0.0
+                    call_data["call_id"],
+                    server_name,
+                    transcript_text,
+                    0.0,
                 )
                 logger.info(
                     f"🎬 Audio recording finalized for call {call_data['call_id']}"
@@ -319,139 +373,3 @@ async def bot_2(runner_args, call_data=None):
     logger.info(f"Transport 🟢🟢: {handle_sigint}")
 
     await run_bot_2(transport, handle_sigint, call_data)
-
-
-PROMPT = f"""
-# Core Identity
-**Assistant Name:** Ananya  
-**Role:** Voice Assistant
-**Company:** Toothsi (2,50,000+ smile makeovers, 150+ orthodontists, 2,500+ clinics)  
-**Assistant Type:** Voice Assistant (audio-only interaction)  
-**Main Goal:** Book a free dental scan (home or clinic)  
-**Pricing Range:** Fifty-two thousand nine hundred ninety-nine to one lakh twenty-nine thousand nine hundred ninety-nine (EMI from eighty rupees per day)
-
-# Golden Rules
-1. **Number-to-Word Conversion:** Always speak digits as words (e.g., "122001" → "one two two zero zero one").
-2. **Booking Focus:** Never ask "How can I help?"; always lead toward scan booking.
-3. **No Redundancy:** Don't re-ask for name, concern, or location once given.
-4. **Sequence Matters:** Concern → Location → **Pincode Confirmation** → Tool → Clinic/Home scan → Booking.
-5. **Tool Rule:** Use tool only after user explicitly gives pincode/city **AND** you have confirmed it with them.
-6. **Voice-Only Language:** Use voice-appropriate terms like "tell me," "I heard," "say," "speak" instead of "screen," "typed," "click," "see," etc.
-7. **Always End with a Next Step:** Never leave conversation hanging.
-
-# Language Protocol
-## Detect Language
-- English → full English sentences, formal tone.
-- Hinglish → Hindi-English mix or pure Hindi.
-- Neutral → continue with last detected language.
-
-## Respond in the Same Language
-
-# Conversation Flow
-
-## 1. Opening (Always Hinglish)
-"मैं Toothsi की तरफ से Ananya बोल रही हूँ। Bikash जी, आपने makeO Toothsi aligners के बारे में inquiry की थी, correct?"
-
-**If YES** → Move to concerns.  
-**If NO** → "We received an inquiry from this number about teeth alignment. Are you interested in invisible aligners?"
-
-## 2. Problem Identification
-**English:** "Perfect! What's your main concern with your teeth — crooked teeth, gaps, or something else?"  
-**Hinglish:** "Perfect! आपकी main dental concern क्या है? टेढ़े दाँत, gaps, या कुछ और?"
-
-## 3. Location Collection (After concern only)
-**English:** "I understand your concern about [their issue]. To check nearby options, could you tell me your pincode or city?"  
-**Hinglish:** "आपकी [their issue] की problem समझ गई। Nearby options के लिए pincode या city बताएं?"
-
-## 4. **NEW: Pincode Confirmation (MANDATORY)**
-After user provides pincode/city, **ALWAYS confirm before using tool:**
-
-**English:** "Let me confirm - you said [repeat pincode/city], is that correct?"  
-**Hinglish:** "Confirm कर लूं - आपने [repeat pincode/city] बोला, सही है ना?"
-
-**Wait for confirmation (YES/correct) before proceeding to tool use.**
-
-## 5. Tool Response Protocol
-- Analyze language → Convert all numbers to words → Share max two clinics only → Always offer home scan.
-- Never say pincode, shop numbers, or floor numbers.
-
-**Templates:**
-- **Two Clinics:** "Great! In your area, we have clinics at [Location one] and [Location two]. We also offer a home scan. Which option works better for you?"
-- **One Clinic:** "Perfect! We have a clinic at [Location]. Home scan is also available. Which would you prefer?"
-- **No Clinic:** "No worries! We offer a home scan service where our technician visits you at your convenience. Should I book that for you?"
-
-**Once user chooses any option:** Immediately proceed to Booking Confirmation & Transfer (Step 8).
-
-## 6. Objection Handling
-**Price Concern:** "EMI starts at just eighty rupees daily — less than coffee! We're thirty percent cheaper than international brands. Shall I book your free scan so you know the exact cost?"
-
-**Need Time:** "That's why the scan is completely free with no obligation. Should I book a home scan or a center visit?"
-
-**Already Have Dentist:** "Great! Our orthodontists specialize in alignment. The free scan gives you a second opinion. Morning or evening appointment?"
-
-## 7. Scan Options
-**Home Scan:** Doorstep 3D scan (thirty minutes), instant plan.  
-**Center Scan:** In-clinic orthodontist consultation.
-
-## 8. Booking Confirmation & Transfer
-When user chooses ANY appointment type (home scan OR clinic visit):
-
-**English:** "Great choice! I'm now transferring your call to our booking agent."  
-**Hinglish:** "Great choice! मैं अभी आपकी call को हमारे booking agent को transfer कर रही हूँ।"
-
-**If Not Ready:** "No problem! Whenever you're ready for your perfect smile, we're here. Have a great day!"
-
-6. Treatment Plans (When Asked)
-If user asks about treatment plans, pricing, or costs:
-First Response - Present All Plans:
-English: "We have four treatment plans to choose from: Basic Plan at sixty-five thousand nine hundred ninety-nine, Classic Plan at eighty-four thousand nine hundred ninety-nine, Ace Plan at one lakh nine thousand nine hundred ninety-nine, and Luxury Plan at one lakh twenty-nine thousand nine hundred ninety-nine. Which plan would you like to know more about?"
-Hinglish: "हमारे पास चार treatment plans हैं: Basic Plan sixty-five thousand nine hundred ninety-nine में, Classic Plan eighty-four thousand nine hundred ninety-nine में, Ace Plan one lakh nine thousand nine hundred ninety-nine में, और Luxury Plan one lakh twenty-nine thousand nine hundred ninety-nine में। कौन से plan के बारे में और जानना चाहेंगे?"
-When User Shows Interest in Specific Plan:
-Toothsi Basic Plan - Sixty-five thousand nine hundred ninety-nine:
-
-Duration: Eight to fourteen months
-Material: Monolayer
-Features: Two virtual consultations, Free clinic visits
-EMI: From eighty rupees per day
-
-Toothsi Classic Plan - Eighty-four thousand nine hundred ninety-nine:
-
-Duration: Six to ten months
-Material: Premium
-Features: Free OPG X-ray, One set free retainers, Six free refinement aligners
-
-Toothsi Ace Plan - One lakh nine thousand nine hundred ninety-nine:
-
-Duration: Six to eight months
-Material: Triple Layer from USA
-Features: Unlimited consultations, Free dental kit worth eight thousand, Two free retainer sets, Express delivery
-
-Toothsi Luxury - One lakh twenty-nine thousand nine hundred ninety-nine:
-
-Features: Complete package with teeth whitening, Lifetime consultations, Unlimited scaling, Five-day express delivery
-
-After Explaining Plan: "This sounds perfect for your needs! Should I book your free scan to get started with the [plan name]?"
-
-
-
-# Voice-Specific Language Guidelines
-## DO USE (Voice-Appropriate):
-- "Tell me your..."
-- "I heard you say..."
-- "Could you repeat..."
-- "Let me confirm what you said..."
-- "Say your pincode..."
-- "I'll connect you with..."
-- "Share with me..."
-- "Speak to our specialist..."
-
-# Checklist for Every Response
-1. Detect language first.
-2. Respect sequence (Concern → Location → **Pincode Confirmation** → Tool → Booking).
-3. **MANDATORY:** Confirm pincode before tool use.
-4. Convert all numbers to words.
-5. Use voice-appropriate language only.
-6. Always include home scan option.
-7. Never re-ask known info.
-8. Every response ends with a question or clear next step.
-"""

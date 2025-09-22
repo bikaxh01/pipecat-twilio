@@ -218,8 +218,6 @@ def get_tts_service_config(tts_provider: str, session: ClientSession):
         return SarvamTTSService(
             api_key=os.getenv("SARVAM_API_KEY"),
             aiohttp_session=session,
-            voice_id="anushka",
-            model="bulbul:v2",
             sample_rate=8000,  # Match Twilio's audio format
             params=SarvamTTSService.InputParams(
                 language=language, pitch=0.0, pace=1.0, loudness=1.0
@@ -231,8 +229,7 @@ def get_tts_service_config(tts_provider: str, session: ClientSession):
         return SarvamTTSService(
             api_key=os.getenv("SARVAM_API_KEY"),
             aiohttp_session=session,
-            voice_id="anushka",
-            model="bulbul:v2",
+            
             sample_rate=8000,  # Match Twilio's audio format
             params=SarvamTTSService.InputParams(
                 language=language, pitch=0.0, pace=1.0, loudness=1.0

@@ -1213,6 +1213,24 @@ def create_prompt_ui():
                         </span>
                     </div>
                         <div class="call-card-sid">${call.call_sid}</div>
+                        ${call.metrics || call.cost ? `
+                            <div style="margin-top: 8px; display: flex; gap: 12px; font-size: 11px;">
+                                ${call.metrics ? `
+                                    <div style="color: #4ade80; font-weight: 600;">
+                                        ⚡ ${call.metrics.total_latency_ms ? call.metrics.total_latency_ms.toFixed(0) + 'ms' : 
+                                          (call.metrics.tts_ttfb_ms && call.metrics.stt_ttfb_ms && call.metrics.llm_ttfb_ms) ? 
+                                          (call.metrics.tts_ttfb_ms + call.metrics.stt_ttfb_ms + call.metrics.llm_ttfb_ms).toFixed(0) + 'ms' : 'N/A'}
+                                    </div>
+                                ` : ''}
+                                ${call.cost ? `
+                                    <div style="color: #fbbf24; font-weight: 600;">
+                                        💰 ${call.cost.total_cost ? '$' + call.cost.total_cost.toFixed(3) : 
+                                          (call.cost.llm_cost && call.cost.tts_cost && call.cost.stt_cost) ? 
+                                          '$' + (call.cost.llm_cost + call.cost.tts_cost + call.cost.stt_cost).toFixed(3) : 'N/A'}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
                 </div>
             `;
             });
@@ -1430,6 +1448,70 @@ def create_prompt_ui():
                             <div class="call-detail-value">${callData.created_at ? new Date(callData.created_at).toLocaleString() : 'N/A'}</div>
                         </div>
                     </div>
+                    
+                    ${callData.metrics ? `
+                        <div style="margin-top: 20px;">
+                            <h4 style="color: #ffffff; margin-bottom: 15px; font-size: 16px; font-weight: 600;">Performance Metrics</h4>
+                            <div class="call-details" style="grid-template-columns: 1fr 1fr 1fr;">
+                                <div class="call-detail">
+                                    <div class="call-detail-label">TTS TTFB</div>
+                                    <div class="call-detail-value">${callData.metrics.tts_ttfb_ms ? callData.metrics.tts_ttfb_ms.toFixed(2) + 'ms' : 'N/A'}</div>
+                                </div>
+                                <div class="call-detail">
+                                    <div class="call-detail-label">STT TTFB</div>
+                                    <div class="call-detail-value">${callData.metrics.stt_ttfb_ms ? callData.metrics.stt_ttfb_ms.toFixed(2) + 'ms' : 'N/A'}</div>
+                                </div>
+                                <div class="call-detail">
+                                    <div class="call-detail-label">LLM TTFB</div>
+                                    <div class="call-detail-value">${callData.metrics.llm_ttfb_ms ? callData.metrics.llm_ttfb_ms.toFixed(2) + 'ms' : 'N/A'}</div>
+                                </div>
+                                <div class="call-detail">
+                                    <div class="call-detail-label">Total Latency</div>
+                                    <div class="call-detail-value" style="color: #4ade80; font-weight: 700;">
+                                        ${callData.metrics.total_latency_ms ? callData.metrics.total_latency_ms.toFixed(2) + 'ms' : 
+                                          (callData.metrics.tts_ttfb_ms && callData.metrics.stt_ttfb_ms && callData.metrics.llm_ttfb_ms) ? 
+                                          (callData.metrics.tts_ttfb_ms + callData.metrics.stt_ttfb_ms + callData.metrics.llm_ttfb_ms).toFixed(2) + 'ms' : 'N/A'}
+                                    </div>
+                                </div>
+                                <div class="call-detail">
+                                    <div class="call-detail-label">Prompt Tokens</div>
+                                    <div class="call-detail-value">${callData.metrics.total_prompt_tokens || 'N/A'}</div>
+                                </div>
+                                <div class="call-detail">
+                                    <div class="call-detail-label">Completion Tokens</div>
+                                    <div class="call-detail-value">${callData.metrics.total_completion_tokens || 'N/A'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${callData.cost ? `
+                        <div style="margin-top: 20px;">
+                            <h4 style="color: #ffffff; margin-bottom: 15px; font-size: 16px; font-weight: 600;">Cost Breakdown</h4>
+                            <div class="call-details" style="grid-template-columns: 1fr 1fr 1fr;">
+                                <div class="call-detail">
+                                    <div class="call-detail-label">LLM Cost</div>
+                                    <div class="call-detail-value">${callData.cost.llm_cost ? '$' + callData.cost.llm_cost.toFixed(4) : 'N/A'}</div>
+                                </div>
+                                <div class="call-detail">
+                                    <div class="call-detail-label">TTS Cost</div>
+                                    <div class="call-detail-value">${callData.cost.tts_cost ? '$' + callData.cost.tts_cost.toFixed(4) : 'N/A'}</div>
+                                </div>
+                                <div class="call-detail">
+                                    <div class="call-detail-label">STT Cost</div>
+                                    <div class="call-detail-value">${callData.cost.stt_cost ? '$' + callData.cost.stt_cost.toFixed(4) : 'N/A'}</div>
+                                </div>
+                                <div class="call-detail">
+                                    <div class="call-detail-label">Total Cost</div>
+                                    <div class="call-detail-value" style="color: #fbbf24; font-weight: 700;">
+                                        ${callData.cost.total_cost ? '$' + callData.cost.total_cost.toFixed(4) : 
+                                          (callData.cost.llm_cost && callData.cost.tts_cost && callData.cost.stt_cost) ? 
+                                          '$' + (callData.cost.llm_cost + callData.cost.tts_cost + callData.cost.stt_cost).toFixed(4) : 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
                     
                     ${callData.transcript ? `
                         <div class="call-transcript">

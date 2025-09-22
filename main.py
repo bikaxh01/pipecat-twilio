@@ -7,13 +7,23 @@ from fastapi import FastAPI, HTTPException, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
-from utils.bot_2 import PROMPT
+
 from utils.twilio import generate_twiml, make_twilio_call
 from loguru import logger
-from utils.tools import get_near_by_clinic_data
-from model.model import Call, CallStatus, PincodeData, organization, STTProvider, TTSProvider
+
+from model.model import Call, CallStatus,  STTProvider, TTSProvider
 
 load_dotenv(override=True)
+
+# Configure file logging
+logger.add(
+    "logs/app_{time:YYYY-MM-DD}.log",
+    rotation="00:00",  # Rotate at midnight (00:00)
+    retention="30 days",  # Keep logs for 30 days
+    level="DEBUG",  # Log everything from DEBUG level and above
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} - {message}",
+    compression="zip"  # Compress old log files
+)
 
 
 class PromptUpdate(BaseModel):
@@ -136,6 +146,8 @@ async def get_call_details(call_sid: str):
             "call_cost": call_record.call_cost,
             "call_duration": call_record.call_duration,
             "transcript": call_record.transcript,
+            "metrics": call_record.metrics.model_dump() if call_record.metrics else None,
+            "cost": call_record.cost.model_dump() if call_record.cost else None,
             "created_at": (
                 call_record.created_at.isoformat() if call_record.created_at else None
             ),
@@ -170,6 +182,8 @@ async def get_latest_calls():
                 "call_cost": call_record.call_cost,
                 "call_duration": call_record.call_duration,
                 "transcript": call_record.transcript,
+                "metrics": call_record.metrics.model_dump() if call_record.metrics else None,
+                "cost": call_record.cost.model_dump() if call_record.cost else None,
                 "created_at": (
                     call_record.created_at.isoformat() if call_record.created_at else None
                 ),
