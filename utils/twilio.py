@@ -1,12 +1,12 @@
 from twilio.rest import Client as TwilioClient
 from twilio.twiml.voice_response import Connect, Stream, VoiceResponse
 import os
+from loguru import logger
 
-
-def generate_twiml(host: str, body_data: dict = None) -> str:
+def generate_twiml(host: str, body_data: dict = None, multimodel: bool = True) -> str:
     """Generate TwiML response with WebSocket streaming using Twilio SDK."""
 
-    websocket_url = get_websocket_url(host)
+    websocket_url = get_websocket_url(host, multimodel)
 
     # Create TwiML response
     response = VoiceResponse()
@@ -19,6 +19,13 @@ def generate_twiml(host: str, body_data: dict = None) -> str:
         # Pass each key-value pair as separate parameters instead of JSON string
         for key, value in body_data.items():
             stream.parameter(name=key, value=value)
+            
+    if not multimodel:
+        agent_name = os.getenv("AGENT_NAME")
+        org_name = os.getenv("ORGANIZATION_NAME")
+        service_host = f"{agent_name}.{org_name}"
+        logger.info(f"Service host: {service_host}")
+        stream.parameter(name="_pipecatCloudServiceHost", value=service_host)
 
     connect.append(stream)
     response.append(connect)
@@ -27,14 +34,12 @@ def generate_twiml(host: str, body_data: dict = None) -> str:
     return str(response)
 
 
-def get_websocket_url(host: str) -> str:
-    """Get the appropriate WebSocket URL based on environment."""
-    env = os.getenv("ENV", "local").lower()
-
-    if env == "production":
-        return "wss://api.pipecat.daily.co/ws/twilio"
-    else:
+def get_websocket_url(host: str, multimodel: bool = True) -> str:
+    """Get the appropriate WebSocket URL based on environment and multimodel setting."""
+    if multimodel:
         return f"wss://{host}/ws"
+    else:
+        return "wss://api.pipecat.daily.co/ws/twilio"
 
 
 def make_twilio_call(
@@ -54,10 +59,11 @@ def make_twilio_call(
     call_params = {
         "to": to_number,
         "from_": from_number,
-        "url": twiml_url,
+        "url": f"{twiml_url}?user_name={"Bikash"}",
         "method": "POST",
     }
-
+    
+    
     # Add status callback if provided
     if status_callback_url:
         call_params.update(

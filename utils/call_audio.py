@@ -131,13 +131,15 @@ async def finalize_audio_recording(call_sid: str, server_name: str, transcript: 
         logger.error(f"❌ Failed to finalize audio recording: {e}")
 
 
-async def upload_recording(call_sid: str, filename: str) -> str:
+async def upload_recording(call_sid: str, filename: str = None, audio_data: bytes = None, format: str = "wav") -> str:
     """
     Upload audio recording to Cloudinary with call_sid as filename.
     
     Args:
         call_sid (str): The Twilio call SID to use as the filename
-        filename (str): Path to the local audio file to upload
+        filename (str, optional): Path to the local audio file to upload
+        audio_data (bytes, optional): Raw audio data to upload (base64 decoded)
+        format (str): Audio format (default: "wav")
         
     Returns:
         str: The secure URL of the uploaded file
@@ -170,14 +172,28 @@ async def upload_recording(call_sid: str, filename: str) -> str:
             api_secret=api_secret
         )
         
-        # Upload file to Cloudinary in recordings folder
-        result = cloudinary.uploader.upload(
-            filename,
-            folder="recordings",
-            public_id=call_sid,  # Use call_sid as filename
-            resource_type="video",  # Cloudinary treats audio as video resource
-            overwrite=True
-        )
+        # Determine upload source
+        if filename and os.path.exists(filename):
+            # Upload from file
+            result = cloudinary.uploader.upload(
+                filename,
+                folder="recordings",
+                public_id=call_sid,  # Use call_sid as filename
+                resource_type="video",  # Cloudinary treats audio as video resource
+                overwrite=True
+            )
+        elif audio_data:
+            # Upload from raw data
+            result = cloudinary.uploader.upload(
+                audio_data,
+                folder="recordings",
+                public_id=call_sid,  # Use call_sid as filename
+                resource_type="video",  # Cloudinary treats audio as video resource
+                format=format,
+                overwrite=True
+            )
+        else:
+            raise ValueError("Either filename or audio_data must be provided")
         
         # Get the secure URL
         upload_url = result.get("secure_url")

@@ -382,11 +382,11 @@ def create_prompt_ui():
         }
         
         .provider-dropdowns {
-            display: none;
+            display: none !important;
         }
         
         .provider-dropdowns.show {
-            display: block;
+            display: none !important;
         }
         
         .call-ui .btn-call {

@@ -46,9 +46,7 @@ async def process_call_completion_background(
             call.transcript = transcript
             logger.info(f"📝 Updated transcript (length: {len(transcript)} chars)")
         
-        # If transcript or cost are not provided, we'll update them later
-        # This allows the upload to proceed even if these values aren't available yet
-        
+      
         # Find and upload recording file
         server_name = f"server_{call_sid}"
         recordings_dir = "recordings"

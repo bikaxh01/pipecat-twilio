@@ -43,7 +43,7 @@ load_dotenv(override=True)
 
 
 async def run_bot_2(
-    transport,  # Will be BaseTransport when imported
+    transport,  
     handle_sigint: bool,
     call_data: dict,
 ):

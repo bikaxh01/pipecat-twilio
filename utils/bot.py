@@ -191,6 +191,7 @@ async def run_bot(
                 allow_interruptions=True,
                 enable_metrics=True,
                 enable_usage_metrics=True,
+                
             ),
             idle_timeout_secs=int(idle_timeout_secs),  # 20 seconds
             cancel_on_idle_timeout=False,  # Don't auto-cancel
@@ -351,6 +352,8 @@ async def bot(runner_args):
             add_wav_header=False,
             vad_analyzer=SileroVADAnalyzer(),
             serializer=serializer,
+            
+
         ),
     )
     handle_sigint = runner_args.handle_sigint
